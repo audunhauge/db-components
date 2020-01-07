@@ -51,6 +51,11 @@
                     <span slot="caption">Totalsum</span>
                 </db-table>
 
+                <db-list cssimport="/css/admin.css" sql="select sum(l.antall * v.pris) as total
+                from linje l inner join vare v on (v.vareid = l.vareid)">
+                    <div class="total">Totalsummen blir ${total} kr</div>
+                </db-list>
+
             </div>
 
         </div>

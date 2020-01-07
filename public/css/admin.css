@@ -45,6 +45,10 @@
   #total {
     --tsize: 150px;
   }
+
+  .total {
+    color:red;
+  }
   
   @media screen and (max-width: 850px) {
       #username , #info { display:none; }

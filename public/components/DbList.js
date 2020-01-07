@@ -11,7 +11,7 @@
 
 (function() {
   const template = document.createElement("template");
-  let base = `<style> .error { box-shadow: inset 0 0 5px red; animation: blink 1s alternate infinite;}
+  const base = `<style> .error { box-shadow: inset 0 0 5px red; animation: blink 1s alternate infinite;}
               @keyframes blink { 100% { box-shadow:inset 0 0 0 red; } }
              </style> #import#  <div id="main"><slot></slot></div>`;
 
@@ -20,9 +20,11 @@
       super();
       this.loaded = false;
       this.sql = "";
+      this.import = "";
       this.service = "/runsql"; // default service
       this._root = this.attachShadow({ mode: "open" });
-      // shadowRoot.append moved to callback - so that any cssimport can be added
+      // shadowRoot.append moved to callback 
+      // - so that any cssimport can be added to base before append
     }
 
     static get observedAttributes() {
@@ -37,8 +39,9 @@
         this.import = `<style>@import "${newValue}";</style>`;
         template.innerHTML = base.replace("#import#", this.import);
         if (this.loaded) {
-          let htmltable = this._root.querySelector("#main");
-          htmltable.innerHTML = "cssimport must be before sql"
+          const divMain = this._root.querySelector("#main");
+          divMain.classList.add("error");
+          divMain.innerHTML = "cssimport must be before sql";
         } else {
           this.shadowRoot.appendChild(template.content.cloneNode(true));
           this.loaded = true;
@@ -46,13 +49,14 @@
       }
       if (name === "sql") {
         if (!this.loaded) {
-          // the css was not ready - must be placed before sql
+          // no css or it was not ready - must be placed before sql
           template.innerHTML = base.replace("#import#", "");
           this.shadowRoot.appendChild(template.content.cloneNode(true));
           this.loaded = true;
         }
-        let sql = (this.sql = newValue);
-        let init = {
+        const sql = (this.sql = newValue);
+        const divMain = this._root.querySelector("#main");
+        const init = {
           method: "POST",
           credentials: "include",
           body: JSON.stringify({ sql }),
@@ -62,41 +66,47 @@
         };
         fetch(this.service, init)
           .then(r => r.json())
-          .then(data => {
-            let list = data.results;
-            let htmltable = this._root.querySelector("#main");
-            if (list.error) {
-              htmltable.classList.add("error");
-              htmltable.title = sql + "\n" + list.error;
-            } else {
-              htmltable.classList.remove("error");
-              let items = Array.from(this._root.querySelectorAll("#main slot"));
-              if (items && items.length) {
-                let elements = items[0].assignedElements();
-                let template;
-                if (elements.length !== 1) {
-                  // one and only one accepted
-                  htmltable.innerHTML = elements.length
-                    ? "Only one top level element allowed"
-                    : "Missing template element";
-                  return;
-                }
-                template = elements[0];
-                if (template && list.length) {
-                  list.forEach(e => {
-                    let copy = template.cloneNode(true);
-                    let replaced = document
-                      .createRange()
-                      .createContextualFragment(fill(copy, e));
-                    copy.innerHTML = "";
-                    copy.append(replaced);
-                    htmltable.append(copy);
-                  });
-                  template.style.display = "none"; // hide template
-                }
-              }
-            }
+          .then(data => feedResultsToTemplate(data,divMain));
+      }
+    }
+  }
+
+  /**
+   * Picks out usertemplate from slot and replicates it for all rows in 
+   * returned query result. Values are interpolated into ${fieldname} in template
+   * @param {Array} data is array returned from query [ {field:value, ...}, ..]
+   */
+  function feedResultsToTemplate(data,divMain) {
+    const list = data.results;
+    if (list.error) {
+      divMain.classList.add("error");
+      divMain.title = sql + "\n" + list.error;
+    } else {
+      divMain.classList.remove("error");
+      const items = Array.from(divMain.querySelectorAll("slot"));
+      if (items && items.length) {
+        const elements = items[0].assignedElements();
+        if (elements.length !== 1) {
+          // one and only one accepted
+          divMain.classList.add("error");
+          divMain.innerHTML = elements.length
+            ? "Only one top level element allowed"
+            : "Missing template element";
+          return;
+        }
+        const userTemplate = elements[0];
+        if (userTemplate && list.length) {
+          list.forEach(e => {
+            const copy = userTemplate.cloneNode(true);
+            const replaced = document
+              .createRange()
+              .createContextualFragment(fill(copy, e));
+            copy.innerHTML = "";
+            copy.append(replaced);
+            divMain.append(copy);
           });
+          userTemplate.style.display = "none"; // hide template
+        }
       }
     }
   }
@@ -107,7 +117,7 @@
    * @param {Object} values to fill into template
    */
   function fill(node, values) {
-    let replaced = node.innerHTML;
+    const replaced = node.innerHTML;
     return replaced.replace(/\$\{(.+?)\}/g, (_, v) => {
       if (values[v]) {
         return values[v];
