@@ -8,6 +8,7 @@
     <title>Registrer bok</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <script src="/components/DbInsert.js"></script>
+    <script src="/components/DbForeign.js"></script>
     <script src="/components/DbTable.js"></script>
     <script src="/components/Homebar.js"></script>
     <link rel="stylesheet" href="/css/admin.css">
@@ -18,13 +19,16 @@
     </home-bar>
     <div id="admin">
         <div class="table">
-            <db-table id="table" update="vare"  fields="vareid:hidden,navn,pris:number" delete="vare"
-                sql="select * from vare">
+            <db-table id="table" update="vare"  fields="vareid:hidden,navn,pris:number,gruppe" delete="vare"
+                sql="select v.*, k.navn as gruppe from vare v left join vare k on (v.kategori = k.vareid)">
                 <span slot="caption">varer</span>
             </db-table>
         </div>
-        <db-insert id="form" fields="navn,pris:number"  table="vare">
+        <db-insert id="form" fields="navn,pris:number" table="vare">
             <span slot="heading">Registrer Vare</span>
+            <db-foreign label="kategori" foreign="kategori"
+                sql="select vareid,navn as kategori from vare">
+            </db-foreign>
         </db-insert>
     </div>
 </body>

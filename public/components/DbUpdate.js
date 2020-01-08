@@ -17,8 +17,16 @@
             border-radius: 5px;
             border: solid gray 1px;
             background-color: gainsboro;
+            margin:2em;
             margin-top: 1em;
         }
+        form::after {
+          color:blue;
+          content: "Oppdatering";
+          position: absolute;
+          right: 20px;
+          top: -20px;
+      }
 
         form > label {
             position: relative;

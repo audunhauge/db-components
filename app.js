@@ -163,6 +163,7 @@ app.post("/makeuser", function (req, res) {
       }
     }
   }
+  res.redirect('/admin/users.html');
 });
 
 app.post("/signup", function (req, res) {
@@ -202,9 +203,14 @@ app.post("/signup", function (req, res) {
  * @param {boolean} kunde set false if only user
  */
 async function makeNewUser(user, kunde = true) {
-  let sql = `insert into users (username,role,password)
+  let failed = false;
+  const sql = `insert into users (username,role,password)
   values ('${user.username}','user','${umd5(user.password)}') returning userid`;
-  let { userid } = await db.one(sql);
+  const { userid } = await db.one(sql).catch(error => {
+    console.log(error.message);
+    failed = true;
+  })
+  if (failed) return;
   userlist[userid] = {
     id: userid,
     username: user.username,
@@ -213,10 +219,14 @@ async function makeNewUser(user, kunde = true) {
   _username2id[user.username] = userid;
   if (kunde) {
     // insert new user as kunde
-    sql = `insert into kunde (userid,fornavn,etternavn,adresse,epost)
+    const sql = `insert into kunde (userid,fornavn,etternavn,adresse,epost)
            values (${userid},'${user.fornavn}',
            '${user.etternavn}','${user.adresse}','${user.epost}') returning kundeid`;
-    let { kundeid } = await db.one(sql);
+    const { kundeid } = await db.one(sql).catch(error => {
+      console.log(error.message);
+      failed = true;
+    })
+    if (failed) return;
     userlist[userid].kundeid = kundeid;
   }
 }
