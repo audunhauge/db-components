@@ -56,7 +56,7 @@ async function lagBrukerliste() {
 }
 
 function findByUsername(rbody, username, cb) {
-  process.nextTick(function() {
+  process.nextTick(function () {
     if (_username2id[username]) {
       let userid = _username2id[username];
       let user = _usersById(userid);
@@ -72,13 +72,13 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 passport.use(
-  new Strategy({ passReqToCallback: true }, function(
+  new Strategy({ passReqToCallback: true }, function (
     req,
     username,
     password,
     cb
   ) {
-    findByUsername(req.body, username, function(err, user, key = "") {
+    findByUsername(req.body, username, function (err, user, key = "") {
       if (err) {
         return cb(err);
       }
@@ -93,12 +93,12 @@ passport.use(
   })
 );
 
-passport.serializeUser(function(user, cb) {
+passport.serializeUser(function (user, cb) {
   cb(null, user.id);
 });
 
-passport.deserializeUser(function(id, cb) {
-  findById(id, function(err, user) {
+passport.deserializeUser(function (id, cb) {
+  findById(id, function (err, user) {
     if (err) {
       return cb(err);
     }
@@ -107,7 +107,7 @@ passport.deserializeUser(function(id, cb) {
 });
 
 function findById(id, cb) {
-  process.nextTick(function() {
+  process.nextTick(function () {
     if (_usersById(id)) {
       cb(null, _usersById(id));
     } else {
@@ -136,7 +136,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // Define routes.
-app.get("/login", function(req, res) {
+app.get("/login", function (req, res) {
   res.redirect("/users/login.html");
 });
 
@@ -148,7 +148,24 @@ app.post(
   })
 );
 
-app.post("/signup", function(req, res) {
+app.post("/makeuser", function (req, res) {
+  if (req.isAuthenticated()) {
+    let user = req.user;
+    let userinfo = userlist[user.id] || {};
+    if (userinfo.role === "admin") {
+      let newuser = req.body;
+      if (
+        newuser.username &&
+        newuser.role &&
+        newuser.password
+      ) {
+        makeNewUser(newuser,false);
+      }
+    }
+  }
+});
+
+app.post("/signup", function (req, res) {
   let user = req.body;
   if (
     user.username &&
@@ -179,8 +196,12 @@ app.post("/signup", function(req, res) {
   }
 });
 
-async function makeNewUser(token) {
-  let user = newusers[token];
+/**
+ * Inserts a new user
+ * @param {Object} user {username,password,role}
+ * @param {boolean} kunde set false if only user
+ */
+async function makeNewUser(user, kunde = true) {
   let sql = `insert into users (username,role,password)
   values ('${user.username}','user','${umd5(user.password)}') returning userid`;
   let { userid } = await db.one(sql);
@@ -190,20 +211,22 @@ async function makeNewUser(token) {
     password: umd5(user.password)
   };
   _username2id[user.username] = userid;
-  // insert new user as kunde
-  delete newusers[token];
-  sql = `insert into kunde (userid,fornavn,etternavn,adresse,epost)
-  values (${userid},'${user.fornavn}',
+  if (kunde) {
+    // insert new user as kunde
+    sql = `insert into kunde (userid,fornavn,etternavn,adresse,epost)
+           values (${userid},'${user.fornavn}',
            '${user.etternavn}','${user.adresse}','${user.epost}') returning kundeid`;
-  let { kundeid } = await db.one(sql);
-  userlist[userid].kundeid = kundeid;
+    let { kundeid } = await db.one(sql);
+    userlist[userid].kundeid = kundeid;
+  }
 }
 
-app.post("/verify", function(req, res) {
+app.post("/verify", function (req, res) {
   let { token } = req.body;
   if (newusers[token]) {
     // verified new user
-    makeNewUser(token);
+    makeNewUser(newusers[token]);
+    delete newusers[token];
     res.redirect("/users/login.html");
   } else {
     res.redirect("/users/signup.html");
@@ -211,7 +234,7 @@ app.post("/verify", function(req, res) {
 });
 
 /* runsql can only be used by auth users */
-app.post("/runsql", function(req, res) {
+app.post("/runsql", function (req, res) {
   let user = req.user;
   let data = req.body;
   if (req.isAuthenticated()) {
@@ -229,7 +252,7 @@ app.post("/runsql", function(req, res) {
 });
 
 // delivers userinfo about logged in user
-app.post("/userinfo", function(req, res) {
+app.post("/userinfo", function (req, res) {
   let user = req.user;
   let data = req.body;
   if (req.isAuthenticated()) {
@@ -267,12 +290,12 @@ async function saferSQL(res, obj, options) {
   res.send({ results });
 }
 
-app.get("/admin/:file", Ensure.ensureLoggedIn(), function(req, res) {
+app.get("/admin/:file", Ensure.ensureLoggedIn(), function (req, res) {
   let { file } = req.params;
   res.sendFile(__dirname + `/admin/${file}`);
 });
 
-app.get("/myself", function(req, res) {
+app.get("/myself", function (req, res) {
   let user = req.user;
   if (user) {
     let { username } = req.user;
@@ -282,7 +305,7 @@ app.get("/myself", function(req, res) {
   }
 });
 
-app.get("/htmlfiler/:admin", function(req, res) {
+app.get("/htmlfiler/:admin", function (req, res) {
   let path = "public";
   if (req.user) {
     let { username } = req.user;
@@ -291,13 +314,13 @@ app.get("/htmlfiler/:admin", function(req, res) {
       path = "admin";
     }
   }
-  fs.readdir(path, function(err, files) {
+  fs.readdir(path, function (err, files) {
     let items = files.filter(e => e.endsWith(".html") && e !== "index.html");
     res.send({ items });
   });
 });
 
-app.listen(3000, function() {
+app.listen(3000, function () {
   console.log(`Connect to http://localhost:${PORT}`);
   lagBrukerliste();
 });
@@ -324,7 +347,7 @@ async function safesql(user, res, obj) {
       ];
       // the last two delete test are insufficient
       // the inserts do not test for valid id of customer
-      if (good.includes(lowsql) || good.includes(lowsql.substr(0,34))) {
+      if (good.includes(lowsql) || good.includes(lowsql.substr(0, 34))) {
         personal = true;
       }
     }

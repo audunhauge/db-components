@@ -69,3 +69,4 @@ alter table bestilling owner to shop;
 alter table vare owner to shop;
 alter table kunde owner to shop;
 alter table linje owner to shop;
+alter table users owner to shop;
