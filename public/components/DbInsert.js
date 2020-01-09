@@ -11,8 +11,8 @@
         }
         form {
             position: relative;
-            width: 35em;
-            max-width: 85%;
+            /*width: 35em;*/
+            /*max-width: 85%;*/
             padding: 5px;
             border-radius: 5px;
             border: solid gray 1px;
@@ -77,6 +77,8 @@
   // extend to more datatypes if needed
   const getval = e => {
     switch (e.type) {
+      case "number":
+        return e.value === "" ? null : Number(e.value);
       case "checkbox":
         return e.checked;
       default:

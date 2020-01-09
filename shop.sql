@@ -42,7 +42,8 @@ CREATE TABLE kunde (
 CREATE TABLE  vare  (
    vareid  SERIAL PRIMARY KEY,
    navn  text NOT NULL,
-   pris  int NOT NULL,
+   pris  int default 0,
+   erkategori boolean default 'f',
    kategori int
 );
 

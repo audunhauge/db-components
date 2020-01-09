@@ -12,11 +12,11 @@
   
   #admin {
     margin: 10px;
-    display: grid;
-    grid-template-columns: 1fr 4fr 4fr 1fr;
-    grid-template-areas:
-      ". editor  view ."
-      ".   .     view .";
+    display: flex;
+    flex-wrap: wrap;
+    /*grid-template-columns: 3fr 3fr 3fr;*/
+    justify-content: space-between;
+    align-items: flex-start;
   }
   
   #admin > * {
@@ -25,11 +25,11 @@
   
   .table {
     width: 30em;
-    grid-area: view;
+   
   }
   
   #form {
-      grid-area: editor;
+    
   }
   
   home-bar {
@@ -50,12 +50,16 @@
     color:red;
   }
   
-  @media screen and (max-width: 850px) {
+  @media screen and (max-width: 1550px) {
+      #username , #info { display:none; }
+      #admin {
+          grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media screen and (max-width: 1054px) {
       #username , #info { display:none; }
       #admin {
           grid-template-columns: 1fr;
-          grid-template-areas:
-          "editor"
-          "view";
       }
-    }
+    }    

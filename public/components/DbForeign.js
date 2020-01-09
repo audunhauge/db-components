@@ -24,6 +24,7 @@
       this.foreign = "";
       this.label = "";
       this.sql = "";
+      this._type = "number";
       this._root = this.attachShadow({ mode: "open" });
       this.shadowRoot.appendChild(template.content.cloneNode(true));
       this._root
@@ -46,7 +47,7 @@
      *          order is [foreign,label]
      */
     static get observedAttributes() {
-      return ["foreign", "label", "sql"];
+      return ["foreign", "label", "sql","type"];
     }
 
     connectedCallback() {
@@ -62,6 +63,10 @@
       return select.value;
     }
 
+    get type() {
+      return this._type;
+    }
+
     attributeChangedCallback(name, oldValue, newValue) {
       let lbl = this._root.querySelector("#select > span");
       let select = this._root.querySelector("#select > select");
@@ -70,8 +75,13 @@
         lbl.innerHTML = newValue.charAt(0).toUpperCase() + newValue.substr(1);
       }
       if (name === "foreign") {
-        this.foreign = newValue;
-        select.id = newValue;
+        const [foreign,local] = newValue.split(":");
+        this.foreign = foreign;
+        this.local = local ? local : foreign;
+        select.id = this.local;
+      }
+      if (name === "type") {
+        this._type = newValue;
       }
       if (name === "sql") {
         this.sql = newValue;

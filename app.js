@@ -48,6 +48,7 @@ async function lagBrukerliste() {
     userlist[userid] = {
       id: userid,
       username: "admin",
+      role:"admin",
       password: umd5("1230")
     };
     _username2id["admin"] = userid;
