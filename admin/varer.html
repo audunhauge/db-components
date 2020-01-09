@@ -19,15 +19,18 @@
     </home-bar>
     <div id="admin">
         <div class="table">
-            <db-table id="table1" update="vare"  fields="vareid:hidden,navn,pris:number,gruppe" delete="vare"
-                sql="select v.*, k.navn as gruppe from vare v left join vare k on (v.kategori = k.vareid) where v.erkategori='f'">
-                <span slot="caption">varer</span>
+            <db-table id="table1" update="vare"  delete="vare"
+            connected="vare:kategori"
+                fields="vareid:hidden,navn,pris:number,gruppe" 
+                sql="select v.*, k.navn as gruppe from vare v 
+                left join vare k on (v.kategori = k.vareid) ">
+                <span slot="caption">Varer</span>
             </db-table>
         </div>
         <div class="table">
             <db-table id="table2" update="vare"  fields="vareid:hidden,navn,gruppe" delete="vare"
                 sql="select v.*, k.navn as gruppe from vare v left join vare k on (v.kategori = k.vareid) where v.erkategori='t' order by k.navn,v.navn">
-                <span slot="caption">varer</span>
+                <span slot="caption">Kategorier</span>
             </db-table>
         </div>
         <db-insert class="table" id="form" fields="navn,pris:number,erkategori:checkbox" table="vare">
