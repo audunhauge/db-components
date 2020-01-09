@@ -1,15 +1,14 @@
 // @ts-check
 
-/* this component fetches userinfo about current logged in user 
-   can then be used as a foreign key or depended on by other components
-   thus app.js can deliver queries where userid = myself
-  */
+/* this component delivers a constant value
+ * that can be depended on by other components
+ * it will also trigger a dbUpdate to let others reload based on this value
+ */
 
 (function() {
   const template = document.createElement("template");
   template.innerHTML = `
           <style>
-          
           label {
               display: grid;
               grid-template-columns: 7fr 4fr;
@@ -27,12 +26,9 @@
           <label id="myself"><span></span><input disabled type="text" value=""></label>
       `;
 
-  class DBUser extends HTMLElement {
+  class DBConstant extends HTMLElement {
     constructor() {
       super();
-      this.sql = "";
-      this.field = "userid";
-      this.table = "users";
       this._root = this.attachShadow({ mode: "open" });
       this.shadowRoot.appendChild(template.content.cloneNode(true));
     }
@@ -42,11 +38,12 @@
      * label    text shown on component
      */
     static get observedAttributes() {
-      return ["field", "label", "sql"];
+      return ["field", "label", "value"];
     }
 
     connectedCallback() {
-      this.getUserInfo(this.field);
+      // give some time for components to load
+      setTimeout(() => this.trigger({}), 200);
     }
 
     get value() {
@@ -54,11 +51,6 @@
       return myself.value;
     }
 
-    get id() {
-      // id is set by changing field
-      let select = this._root.querySelector("#myself > input");
-      return select.id;
-    }
 
     attributeChangedCallback(name, oldValue, newValue) {
       let lbl = this._root.querySelector("#myself > span");
@@ -67,8 +59,8 @@
         this.label = newValue;
         lbl.innerHTML = newValue.charAt(0).toUpperCase() + newValue.substr(1);
       }
-      if (name === "sql") {
-        this.sql = newValue;
+      if (name === "value") {
+        input.value = newValue;
       }
       if (name === "field") {
         this.field = newValue;
@@ -78,6 +70,7 @@
 
     trigger(detail) {
       detail.source = this.id;
+      detail.field = this.field;
       this.dispatchEvent(
         new CustomEvent("dbUpdate", {
           bubbles: true,
@@ -87,31 +80,7 @@
       );
     }
 
-    getUserInfo(field) {
-      let input = this._root.querySelector("#myself > input");
-      let data = "";
-      let sql = "select " + (this.sql || field);
-      let init = {
-        method: "POST",
-        credentials: "include",
-        body: JSON.stringify({ sql, data }),
-        headers: {
-          "Content-Type": "application/json"
-        }
-      };
-      fetch("/userinfo", init)
-        .then(r => r.json())
-        .then(userinfo => {
-          console.log(userinfo);
-          if (userinfo && userinfo[field]) {
-            let value = userinfo[field];
-            input.value = value;
-            this.trigger({});
-          }
-        });
-      //.catch(e => console.log(e.message));
-    }
   }
 
-  window.customElements.define("db-user", DBUser);
+  window.customElements.define("db-constant", DBConstant);
 })();

@@ -27,7 +27,7 @@
                 <span slot="heading">Bestilling Vare</span>
                 <db-user id="kundeid" field="kundeid" label="Kundenr"></db-user>
             </db-insert>
-           
+            
 
             <div class="table">
                 <db-table connected="kundeid:kundeid" id="bestilling" update="bestilling" key="bestillingid"
@@ -51,7 +51,8 @@
                     <span slot="caption">Totalsum</span>
                 </db-table>
 
-                <db-list cssimport="/css/admin.css" sql="select sum(l.antall * v.pris) as total
+                <db-list connected="bestilling:bestillingid"
+                cssimport="/css/admin.css" service="/runsql" sql="select sum(l.antall * v.pris) as total
                 from linje l inner join vare v on (v.vareid = l.vareid)">
                     <div class="total">Totalsummen blir ${total} kr</div>
                 </db-list>

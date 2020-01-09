@@ -34,7 +34,7 @@
             new CustomEvent("dbUpdate", {
               bubbles: true,
               composed: true,
-              detail: { id:this.id }
+              detail: { id: this.id }
             })
           );
         });
@@ -44,10 +44,11 @@
      * foreign  the foreign key connected to this select (book.bookid)
      * label    the field that supplies text for choosing (book.title to choose book.bookid)
      * sql      sql that supplies a list of (foreign,label) to feed into make-select
-     *          order is [foreign,label]
+     * type     default is number
+     * table    listen for updates on this table if set
      */
     static get observedAttributes() {
-      return ["foreign", "label", "sql","type"];
+      return ["foreign", "label", "sql", "type", "table"];
     }
 
     connectedCallback() {
@@ -75,13 +76,24 @@
         lbl.innerHTML = newValue.charAt(0).toUpperCase() + newValue.substr(1);
       }
       if (name === "foreign") {
-        const [foreign,local] = newValue.split(":");
+        const [foreign, local] = newValue.split(":");
         this.foreign = foreign;
         this.local = local ? local : foreign;
         select.id = this.local;
       }
       if (name === "type") {
         this._type = newValue;
+      }
+      if (name === "table") {
+        // if dbUpdate of this table then rerun the sql
+        this.table = newValue;
+        addEventListener("dbUpdate", e => {
+          let source = e.detail.source;
+          let table = e.detail.table;
+          let done = false;
+          if (this.table === table && this.sql)
+            this.makeSelect(select, this.sql, this.foreign, this.label);
+        });
       }
       if (name === "sql") {
         this.sql = newValue;
