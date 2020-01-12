@@ -89,35 +89,45 @@
   class DBInsert extends HTMLElement {
     constructor() {
       super();
+      const now = new Date();
+      this.signature = this.id + "_" + now.getMilliseconds();
       this.table = "";
       this.fields = "";
+      this.silent = "";
       this._root = this.attachShadow({ mode: "open" });
       this.shadowRoot.appendChild(template.content.cloneNode(true));
       // this is code for creating sql insert statement
       this._root.querySelector("#save").addEventListener("click", e => {
         // aliens will pick out any db-foreign placed into alien-slot
-        let aliens = Array.from(this._root.querySelectorAll("#alien slot"))
+        const aliens = Array.from(this._root.querySelectorAll("#alien slot"))
           .map(e => e.assignedElements()[0])
           .filter(e => e !== undefined);
-        let foreign = Array.from(
+        const foreign = Array.from(
           this._root.querySelectorAll("#foreign select")
         );
-        let inputs = Array.from(this._root.querySelectorAll("#fields input"))
+        const inputs = Array.from(this._root.querySelectorAll("#fields input"))
           .concat(foreign)
           .concat(aliens);
-        let names = inputs.map(e => e.id);
-        let valueList = names.map(e => `$[${e}]`).join(",");
-        let namelist = names.join(",");
+        const names = inputs.map(e => e.id);
+        const valueList = names.map(e => `$[${e}]`).join(",");
+        const namelist = names.join(",");
         // get value of input element - handles checkboxes
-        let data = inputs.reduce((s, e) => ((s[e.id] = getval(e)), s), {});
-        let table = this.table;
-        let sql = `insert into ${table} (${namelist}) values (${valueList})`;
+        const data = inputs.reduce((s, e) => ((s[e.id] = getval(e)), s), {});
+        const table = this.table;
+        const sql = `insert into ${table} (${namelist}) values (${valueList})`;
         this.upsert(sql, data);
       });
     }
 
+    /**
+     * table      listen for updates on this table if set
+     * fields     the fields to show in form
+     * foreign    the foreign key connected to this select (book.bookid)
+     * connected  listen for event emitted by this component
+     * silent     dont emitt events
+     */
     static get observedAttributes() {
-      return ["table", "fields", "foreign", "connected"];
+      return ["table", "fields", "foreign", "connected", "silent"];
     }
 
     connectedCallback() {
@@ -125,21 +135,21 @@
     }
 
     makeform(fields) {
-      let divFields = this._root.querySelector("#fields");
+      const divFields = this._root.querySelector("#fields");
       divFields.innerHTML = "";
-      let fieldlist = fields.split(",");
+      const fieldlist = fields.split(",");
       for (let i = 0; i < fieldlist.length; i++) {
         let [name, type = "text", text = ""] = fieldlist[i].split(":");
         text = (t => t.charAt(0).toUpperCase() + t.substr(1))(text || name);
-        let label = document.createElement("label");
+        const label = document.createElement("label");
         label.innerHTML = `${text} <input type="${type}" id="${name}">`;
         divFields.appendChild(label);
       }
     }
 
     attributeChangedCallback(name, oldValue, newValue) {
-      let divFields = this._root.querySelector("#fields");
-      let divForeign = this._root.querySelector("#foreign");
+      const divFields = this._root.querySelector("#fields");
+      const divForeign = this._root.querySelector("#foreign");
       if (name === "fields") {
         this.fields = newValue;
         this.makeform(this.fields);
@@ -147,20 +157,24 @@
       if (name === "table") {
         this.table = newValue;
       }
+      if (name === "silent") {
+        this.silent = newValue;
+      }
       if (name === "connected") {
         this.connected = newValue;
-        // this component depends on another
-        addEventListener("dbUpdate", e => {
-          let source = e.detail.source;
-          let [id, field] = this.connected.split(":");
-          if (id !== source) return; // we are not interested
-          let dbComponent = document.getElementById(id);
+        // this component depends on an other specific component
+        const [id, field] = this.connected.split(":");
+        addEventListener(`dbFrom-${id}`, e => {
+          // TODO remove 2 lines if new code works
+          // const source = e.detail.source;
+          // if (id !== source) return; // we are not interested
+          const dbComponent = document.getElementById(id);
           if (dbComponent) {
             this.makeform(this.fields);
             // component found - get its value
-            let value = dbComponent.value || "";
+            const value = dbComponent.value || "";
             if (value !== "") {
-              let label = document.createElement("label");
+              const label = document.createElement("label");
               label.innerHTML = `${field} <input disabled type="text" id="${field}" value="${value}">`;
               divFields.appendChild(label);
               this._root.querySelector("form").classList.remove("invalid");
@@ -168,20 +182,20 @@
               // we must redraw as empty
               this._root.querySelector("form").classList.add("invalid");
               this.idx = undefined;
-              this.trigger({}); // cascade
+              this.trigger({},`dbFrom-${this.id}`); // cascade for those who care about us
             }
           }
         });
       }
       if (name === "foreign") {
         divForeign.innerHTML = "";
-        let fieldlist = newValue.split(",");
+        const fieldlist = newValue.split(",");
         for (let i = 0; i < fieldlist.length; i++) {
-          let [table, fields] = fieldlist[i].split(".");
+          const [table, fields] = fieldlist[i].split(".");
           let [field, use] = fields.split(":");
           use = (use || field).replace("+", ",");
-          let text = table.charAt(0).toUpperCase() + table.substr(1);
-          let label = document.createElement("label");
+          const text = table.charAt(0).toUpperCase() + table.substr(1);
+          const label = document.createElement("label");
           label.innerHTML = `${text} <span class="foreign">${field} </span> <select id="${field}"></select>`;
           divForeign.appendChild(label);
           this.makeSelect(table, field, use);
@@ -189,10 +203,11 @@
       }
     }
 
-    trigger(detail) {
+    trigger(detail, eventname = 'dbUpdate') {
+      if (this.silent !== "") return;
       detail.source = this.id;
       this.dispatchEvent(
-        new CustomEvent("dbUpdate", {
+        new CustomEvent(eventname, {
           bubbles: true,
           composed: true,
           detail
@@ -203,10 +218,10 @@
     // assumes foreign key has same name in both tables
     // bok.forfatterid references forfatter.forfatterid
     makeSelect(table, field, use) {
-      let fields = field === use ? field : `${field}, ${use}`;
-      let sql = `select ${fields} from ${table} order by ${use}`;
-      let data = "";
-      let init = {
+      const fields = field === use ? field : `${field}, ${use}`;
+      const sql = `select ${fields} from ${table} order by ${use}`;
+      const data = "";
+      const init = {
         method: "POST",
         credentials: "include",
         body: JSON.stringify({ sql, data }),
@@ -218,10 +233,10 @@
         .then(r => r.json())
         .then(data => {
           console.log(data);
-          let list = data.results;
-          let labels = use.split(",");
+          const list = data.results;
+          const labels = use.split(",");
           if (list.length) {
-            let options = list
+            const options = list
               .map(
                 e =>
                   `<option value="${e[field]}">${labels
@@ -236,7 +251,7 @@
     }
 
     upsert(sql = "", data) {
-      let init = {
+      const init = {
         method: "POST",
         credentials: "include",
         body: JSON.stringify({ sql, data }),
@@ -248,7 +263,7 @@
       fetch("/runsql", init)
         .then(
           () =>
-            this.trigger({ table: this.table, insert: true })
+            this.trigger({ sig:this.signature, table: this.table, insert: true })
         )
         .catch(e => console.log(e.message));
     }

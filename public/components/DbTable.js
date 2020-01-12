@@ -76,29 +76,33 @@
     // NOTE (value == null) covers (value == undefined) also
     switch (type) {
       case "boolean":
-        return (value ? {type:'true', value:'✓'} : { type:'false',value:'✗'});
+        return value
+          ? { type: "true", value: "✓" }
+          : { type: "false", value: "✗" };
       case "number":
-        return {type, value:+value };
+        return { type, value: +value };
       case "money":
-        return {type:"number", value:(+value).toFixed(2) };
+        return { type: "number", value: (+value).toFixed(2) };
       case "int":
-        return {type:"number", value:Math.trunc(+value)};
+        return { type: "number", value: Math.trunc(+value) };
       case "date":
-        let date = "";
-        date = value == null ? "" : value.split("T")[0];
-        return {type,value:date};
+        const date = value == null ? "" : value.split("T")[0];
+        return { type, value: date };
       default:
-        let cleanValue = value === null ? "" : value;
-        return {type,value:cleanValue};
+        const cleanValue = value === null ? "" : value;
+        return { type, value: cleanValue };
     }
   };
 
   class DBTable extends HTMLElement {
     constructor() {
       super();
+      const now = new Date();
       this.selectedRow;
+      this.signature = this.id + "_" + now.getMilliseconds();
       this.rows = []; // data from sql
       this.key = "";
+      this.silent = ""; // emit no events
       this.refsql = ""; // set if updated by dbupdate - reused by simple refresh
       this.delete = "";
       this.connected = ""; // use given db-component as where, assumed to implement get.value
@@ -106,45 +110,14 @@
       this._root = this.attachShadow({ mode: "open" });
       this.shadowRoot.appendChild(template.content.cloneNode(true));
       addEventListener("dbUpdate", e => {
-        let source = e.detail.source;
-        let table = e.detail.table;
-        let done = false;
-        if (source && this.connected !== "") {
-          // otherwise do an update
-          let [id, field] = this.connected.split(":");
-          if (id === source) {
-            done = true;
-            let dbComponent = document.getElementById(id);
-            if (dbComponent) {
-              // component found - get its value
-              let value = dbComponent.value || "";
-              if (value !== "") {
-                // check that sql does not have where clause and value is int
-                let sql = this.sql;
-                let intvalue = Math.trunc(Number(value));
-                if (sql.includes("where") || !Number.isInteger(intvalue))
-                  return; // do nothing
-                sql += ` where ${field} = ${intvalue}`; // value is integer
-                this.refsql = sql; // reuse if refreshed by update
-                this.redraw(sql);
-              } else {
-                // we must redraw as empty
-                let divBody = this._root.querySelector("#tbody");
-                divBody.innerHTML = "";
-                this.selectedRow = undefined;
-                this.trigger({}); // cascade
-              }
-            }
-          }
-        }
-        // check if we need a simple refresh
-        if (!done && this.update && this.update === table)
+        const table = e.detail.table;
+        if (this.update && this.update === table)
           this.redraw(this.refsql || this.sql);
       });
       // can set focus on a row in table
-      let divBody = this._root.querySelector("#tbody");
+      const divBody = this._root.querySelector("#tbody");
       divBody.addEventListener("click", e => {
-        let prev = divBody.querySelector("tr.selected");
+        const prev = divBody.querySelector("tr.selected");
         if (prev) prev.classList.remove("selected"); // should be only one
         let t = e.target;
         while (t && t.localName !== "tr") {
@@ -153,13 +126,30 @@
         if (t && t.dataset && t.dataset.idx) {
           t.classList.add("selected");
           this.selectedRow = Number(t.dataset.idx);
-          this.trigger({ row: this.selectedRow });
+          this.trigger({ row: this.selectedRow }, `dbFrom-${this.id}`);
         }
       });
     }
 
+    /**
+     * key        fields[key] is returned as value by this component
+     * fields     the fields to show in form
+     * sql        select for fields
+     * connected  listen for event emitted by this component
+     * delete     allow deletes
+     * update     redraw when this table changes
+     * silent     don't emit events
+     */
     static get observedAttributes() {
-      return ["fields", "sql", "update", "key", "connected", "delete"];
+      return [
+        "fields",
+        "sql",
+        "update",
+        "key",
+        "connected",
+        "delete",
+        "silent"
+      ];
     }
 
     connectedCallback() {
@@ -174,14 +164,15 @@
       if (this.selectedRow === undefined) {
         return undefined;
       }
-      let current = this.rows[this.selectedRow];
+      const current = this.rows[this.selectedRow];
       return current[this.key];
     }
 
-    trigger(detail) {
+    trigger(detail, eventname = "dbUpdate") {
+      if (this.silent !== "") return;
       detail.source = this.id;
       this.dispatchEvent(
-        new CustomEvent("dbUpdate", {
+        new CustomEvent(eventname, {
           bubbles: true,
           composed: true,
           detail
@@ -190,18 +181,18 @@
     }
 
     attributeChangedCallback(name, oldValue, newValue) {
-      let divThead = this._root.querySelector("#thead");
-      let divBody = this._root.querySelector("#tbody");
+      const divThead = this._root.querySelector("#thead");
+      const divBody = this._root.querySelector("#tbody");
       if (name === "fields") {
         divThead.innerHTML = "";
-        let fieldlist = newValue.split(",");
-        let headers = fieldlist.map(h => {
-          let [name, type = "text"] = h.split(":");
+        const fieldlist = newValue.split(",");
+        const headers = fieldlist.map(h => {
+          const [name, type = "text"] = h.split(":");
           return { name, type };
         });
         this.fieldlist = headers;
         for (let { name, type } of headers) {
-          let th = document.createElement("th");
+          const th = document.createElement("th");
           th.innerHTML = name;
           th.className = type;
           divThead.appendChild(th);
@@ -209,9 +200,38 @@
       }
       if (name === "connected") {
         this.connected = newValue;
+        // this component depends on an other specific component
+        const [id, field] = this.connected.split(":");
+        addEventListener(`dbFrom-${id}`, e => {
+          // const source = e.detail.source;
+          // if (this.id === source) return; // triggered by self
+          const dbComponent = document.getElementById(id);
+          if (dbComponent) {
+            // component found - get its value
+            const value = dbComponent.value || "";
+            if (value !== "") {
+              // check that sql does not have where clause and value is int
+              let sql = this.sql;
+              const intvalue = Math.trunc(Number(value));
+              if (sql.includes("where") || !Number.isInteger(intvalue)) return; // do nothing
+              sql += ` where ${field} = ${intvalue}`; // value is integer
+              this.refsql = sql; // reuse if refreshed by update
+              this.redraw(sql);
+            } else {
+              // we must redraw as empty
+              const divBody = this._root.querySelector("#tbody");
+              divBody.innerHTML = "";
+              this.selectedRow = undefined;
+              this.trigger({}, `dbFrom-${this.id}`); // cascade
+            }
+          }
+        });
       }
       if (name === "sql") {
         this.sql = newValue;
+      }
+      if (name === "silent") {
+        this.silent = newValue;
       }
       if (name === "key") {
         this.key = newValue;
@@ -226,18 +246,18 @@
         // the first field value is stored on checkbox to make this easy
         this.delete = newValue;
 
-        let th = document.createElement("th");
+        const th = document.createElement("th");
         th.innerHTML = "<button>x</button>";
         divThead.appendChild(th);
         divThead.querySelector("button").addEventListener("click", () => {
-          let table = this.delete;
-          let leader = this.fieldlist[0].name;
-          let selected = Array.from(divBody.querySelectorAll("input:checked"))
+          const table = this.delete;
+          const leader = this.fieldlist[0].name;
+          const selected = Array.from(divBody.querySelectorAll("input:checked"))
             .map(e => e.value)
             .join(",");
-          let sql = `delete from ${table} where ${leader} in (${selected})`;
-          let data = {};
-          let init = {
+          const sql = `delete from ${table} where ${leader} in (${selected})`;
+          const data = {};
+          const init = {
             method: "POST",
             credentials: "include",
             body: JSON.stringify({ sql, data }),
@@ -248,14 +268,14 @@
           fetch("/runsql", init)
             .then(r => r.json())
             .then(data => {
-              let list = data.results; // check for errors
-              let htmltable = this._root.querySelector("table");
+              const list = data.results; // check for errors
+              const htmltable = this._root.querySelector("table");
               if (list.error) {
                 htmltable.classList.add("error");
                 htmltable.title = sql + "\n" + list.error;
                 return;
               } else {
-                this.trigger({ update: true, table });
+                this.trigger({ sig:this.signature, delete: true, table });
               }
             })
             .catch(e => console.log(e.message));
@@ -265,10 +285,10 @@
 
     redraw(sql) {
       this.selectedRow = undefined;
-      let divBody = this._root.querySelector("#tbody");
+      const divBody = this._root.querySelector("#tbody");
       if (this.sql && divBody) {
-        //let sql = this.sql;
-        let init = {
+        //const sql = this.sql;
+        const init = {
           method: "POST",
           credentials: "include",
           body: JSON.stringify({ sql }),
@@ -280,8 +300,8 @@
           .then(r => r.json())
           .then(data => {
             // console.log(data);
-            let list = data.results;
-            let htmltable = this._root.querySelector("table");
+            const list = data.results;
+            const htmltable = this._root.querySelector("table");
             if (list.error) {
               htmltable.classList.add("error");
               htmltable.title = sql + "\n" + list.error;
@@ -291,17 +311,17 @@
             htmltable.title = "";
             this.rows = list; // so we can pick values
             let rows = "";
-            let headers = this.fieldlist;
-            let chkDelete = this.delete;
-            let leader = headers[0].name; // name of first field
+            const headers = this.fieldlist;
+            const chkDelete = this.delete;
+            const leader = headers[0].name; // name of first field
             if (list.length) {
               rows = list
                 .map(
                   (e, i) =>
                     `<tr data-idx="${i}">${headers
                       .map((h, i) => {
-                        let {value,type} = formatField(h.type,e[h.name]);
-                        return `<td class="${type}">${value}</td>`
+                        const { value, type } = formatField(h.type, e[h.name]);
+                        return `<td class="${type}">${value}</td>`;
                       })
                       .join("")} ${
                       chkDelete
@@ -312,7 +332,7 @@
                 .join("");
             }
             divBody.innerHTML = rows;
-            this.trigger({}); // dependents may redraw
+            this.trigger({}, `dbFrom-${this.id}`); // dependents may redraw
           });
       }
     }

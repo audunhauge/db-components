@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script src="/components/DbInsert.js"></script>
+    <script src="/components/DbForeign.js"></script>
+    <script src="/components/DbUpdate.js"></script>
+    <script src="/components/DbTable.js"></script>
+    <script src="/components/Homebar.js"></script>
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+
+<body>
+
+    <div id="main">
+        <div id="admin">
+            <div>
+
+                <db-table id="test" key="vareid" fields="vareid:hidden,navn,pris,categori" update="vare" sql="select v.*,k.navn as categori from vare v 
+                     left join vare k on (v.kategori = k.vareid) order by categori,navn">
+                    <span slot="caption">Varer</span>
+                </db-table>
+
+                <db-insert id="nyvare" fields="navn,pris:number,erkategori:checkbox" table="vare">
+                    <span slot="heading">Registrer Vare</span>
+                    <db-foreign label="kategori" field="kategori" foreign="vareid:kategori" table="vare"
+                        sql="select vareid,navn as kategori from vare where erkategori = 't'">
+                    </db-foreign>
+                </db-insert>
+
+                <db-foreign id="motorsag" label="Kategori:Motorsager" values="8" field="v.kategori"></db-foreign>
+
+
+                <db-table id="table1" connected="motorsag:v.kategori" key="vareid"
+                    fields="vareid:hidden,navn,pris:number,gruppe" delete="vare" update="vare" sql="select v.*, k.navn as gruppe from vare v 
+                             left join vare k on (v.kategori = k.vareid) ">
+                    <span slot="caption">Motorsager</span>
+                </db-table>
+
+                <db-update id="jummy" table="vare" update="vare" key="vareid" fields="navn,pris:number,kategori:ignore">
+                    <db-foreign label="kategori" field="kategori" selected="jummy" foreign="vareid:kategori"
+                        sql="select vareid,navn as kategori from vare where erkategori = 't'">
+                    </db-foreign>
+                </db-update>
+
+                <db-update id="goblin" table="vare" connected="test:vareid" update="vare" key="vareid"
+                    fields="navn,pris:number,kategori">
+                </db-update>
+
+
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        /*
+        window.customElements.whenDefined('db-update').then(() => {
+            console.log('db-update defined');
+        });
+        window.customElements.whenDefined('db-table').then(() => {
+            console.log('db-table defined');
+        });
+        window.customElements.whenDefined('db-foreign').then(() => {
+            console.log('db-foreign defined');
+        });
+        window.customElements.whenDefined('db-insert').then(() => {
+            console.log('db-insert defined');
+        });
+        */
+    </script>
+
+</body>
+
+</html>

@@ -19,16 +19,6 @@
     </home-bar>
     <div id="admin">
         <div class="table">
-            <db-table id="table1" 
-                connected="table2:v.kategori"
-                fields="vareid:hidden,navn,pris:number,gruppe" 
-                delete="vare" update="vare"  
-                sql="select v.*, k.navn as gruppe from vare v 
-                left join vare k on (v.kategori = k.vareid) ">
-                <span slot="caption">Varer</span>
-            </db-table>
-        </div>
-        <div class="table">
             <db-table id="table2" 
                 fields="vareid:hidden,navn,gruppe" key="vareid"
                 update="vare"  delete="vare"  
@@ -38,9 +28,20 @@
                 <span slot="caption">Kategorier</span>
             </db-table>
         </div>
+        <div class="table">
+            <db-table id="table1" 
+                connected="table2:v.kategori"
+                fields="vareid:hidden,navn,pris:number,gruppe" 
+                delete="vare" update="vare"  
+                sql="select v.*, k.navn as gruppe from vare v 
+                left join vare k on (v.kategori = k.vareid) ">
+                <span slot="caption">Varer i valgt kategori</span>
+            </db-table>
+        </div>
+       
         <db-insert class="table" id="form" fields="navn,pris:number,erkategori:checkbox" table="vare">
             <span slot="heading">Registrer Vare</span>
-            <db-foreign label="kategori" foreign="vareid:kategori" table="vare"
+            <db-foreign label="kategori" field="kategori" foreign="vareid:kategori" table="vare"
                 sql="select vareid,navn as kategori from vare where erkategori = 't'">
             </db-foreign>
         </db-insert>

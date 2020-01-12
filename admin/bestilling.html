@@ -46,13 +46,15 @@
                     <span slot="caption">Varelinje</span>
                 </db-table>
 
-                <db-table id="total" connected="bestilling:bestillingid" fields="total:money" update="linje" sql="select sum(l.antall * v.pris) as total
+                <db-table id="total" connected="bestilling:bestillingid" fields="total:money" update="linje" 
+                                sql="select sum(coalesce(l.antall * v.pris,0)) as total
                                 from linje l inner join vare v on (v.vareid = l.vareid)">
                     <span slot="caption">Totalsum</span>
                 </db-table>
 
                 <db-list connected="bestilling:bestillingid"
-                cssimport="/css/admin.css" service="/runsql" sql="select sum(l.antall * v.pris) as total
+                cssimport="/css/admin.css" service="/runsql" 
+                sql="select coalesce(sum(l.antall * v.pris),0) as total
                 from linje l inner join vare v on (v.vareid = l.vareid)">
                     <div class="total">Totalsummen blir ${total} kr</div>
                 </db-list>
