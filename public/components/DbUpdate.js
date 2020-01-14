@@ -11,14 +11,11 @@
         }
         form {
             position: relative;
-            width: 35em;
-            max-width: 85%;
             padding: 5px;
             border-radius: 5px;
             border: solid gray 1px;
             background-color: gainsboro;
-            margin:2em;
-            margin-top: 1em;
+            margin: 2em;
         }
         form::after {
           color:blue;

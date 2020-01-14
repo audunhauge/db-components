@@ -52,7 +52,7 @@
                     <span slot="caption">Totalsum</span>
                 </db-table>
 
-                <db-list connected="bestilling:bestillingid"
+                <db-list connected="bestilling:bestillingid" update="linje"
                 cssimport="/css/admin.css" service="/runsql" 
                 sql="select coalesce(sum(l.antall * v.pris),0) as total
                 from linje l inner join vare v on (v.vareid = l.vareid)">

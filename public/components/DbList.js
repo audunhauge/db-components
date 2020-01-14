@@ -33,13 +33,6 @@
       this._root = this.attachShadow({ mode: "open" });
       // shadowRoot.append moved to callback
       // - so that any cssimport can be added to base before append
-      addEventListener("dbUpdate", e => {
-        const table = e.detail.table;
-        const divMain = this._root.querySelector("#main");
-        if (!divMain) return; // not ready
-        if (this.update && this.update === table)
-          this.redraw(this.refsql || this.sql, divMain, this.service);
-      });
     }
 
     /**
@@ -75,7 +68,7 @@
       const list = data.results;
       if (list.error) {
         divMain.classList.add("error");
-        divMain.title = sql + "\n" + list.error;
+        divMain.title = this.sql + "\n" + list.error;
       } else {
         const items = Array.from(divMain.querySelectorAll("slot"));
         if (items && items.length) {
@@ -177,6 +170,13 @@
       }
       if (name === "update") {
         this.update = newValue;
+        addEventListener("dbUpdate", e => {
+          const table = e.detail.table;
+          const divMain = this._root.querySelector("#main");
+          if (!divMain) return; // not ready
+          if (this.update && this.update === table)
+            this.redraw(this.refsql || this.sql, divMain, this.service);
+        });
       }
       if (name === "sql") {
         const sql = (this.sql = newValue);
@@ -186,14 +186,12 @@
           this.shadowRoot.appendChild(template.content.cloneNode(true));
           this.loaded = true;
         }
-        if (this.connected !== "") return;  // must wait for event to trigger us
+        if (this.connected !== "") return; // must wait for event to trigger us
         const divMain = this._root.querySelector("#main");
         this.redraw(sql, divMain, this.service);
       }
     }
   }
-
- 
 
   /**
    * Fills in a template "xxx ${key}" with value from values
