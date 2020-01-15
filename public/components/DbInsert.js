@@ -1,6 +1,6 @@
 // @ts-check
 
-(function() {
+(function () {
   const template = document.createElement("template");
   template.innerHTML = `
         <style>
@@ -89,8 +89,7 @@
   class DBInsert extends HTMLElement {
     constructor() {
       super();
-      const now = new Date();
-      this.signature = this.id + "_" + now.getMilliseconds();
+      this.service = "/runsql"; // default service
       this.table = "";
       this.fields = "";
       this.silent = "";
@@ -127,7 +126,7 @@
      * silent     dont emitt events
      */
     static get observedAttributes() {
-      return ["table", "fields", "foreign", "connected", "silent"];
+      return ["table", "fields", "foreign", "connected", "silent", "service"];
     }
 
     connectedCallback() {
@@ -157,6 +156,9 @@
       if (name === "table") {
         this.table = newValue;
       }
+      if (name === "service") {
+        this.service = newValue;
+      }
       if (name === "silent") {
         this.silent = newValue;
       }
@@ -182,7 +184,7 @@
               // we must redraw as empty
               this._root.querySelector("form").classList.add("invalid");
               this.idx = undefined;
-              this.trigger({},`dbFrom-${this.id}`); // cascade for those who care about us
+              this.trigger({}, `dbFrom-${this.id}`); // cascade for those who care about us
             }
           }
         });
@@ -229,7 +231,7 @@
           "Content-Type": "application/json"
         }
       };
-      fetch("/runsql", init)
+      fetch(this.service, init)
         .then(r => r.json())
         .then(data => {
           console.log(data);
@@ -260,10 +262,10 @@
         }
       };
       console.log(sql, data);
-      fetch("/runsql", init)
+      fetch(this.service, init)
         .then(
           () =>
-            this.trigger({ sig:this.signature, table: this.table, insert: true })
+            this.trigger({ table: this.table, insert: true })
         )
         .catch(e => console.log(e.message));
     }

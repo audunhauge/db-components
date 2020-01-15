@@ -21,8 +21,6 @@
   class DBList extends HTMLElement {
     constructor() {
       super();
-      const now = new Date();
-      this.signature = this.id + "_" + now.getMilliseconds();
       this.loaded = false;
       this.sql = "";
       this.silent = "";

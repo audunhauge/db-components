@@ -59,6 +59,12 @@
                     <div class="total">Totalsummen blir ${total} kr</div>
                 </db-list>
 
+                <db-table connected="bestilling:bestillingid" fields="linjeid:hidden,navn,antall:int,pris:money"
+                    service="/brukerbestilling"
+                    sql="select * from linje">
+                    <span slot="caption">Varelinje</span>
+                </db-table>
+
             </div>
 
         </div>

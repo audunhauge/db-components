@@ -37,8 +37,7 @@
   class DBForeign extends HTMLElement {
     constructor() {
       super();
-      const now = new Date();
-      this.signature = this.id + "_" + now.getMilliseconds();
+      this.service = "/runsql"; // default service
       this.mono = false; // more than one value - triggered by select change
       this.foreign = "";
       this.selected = ""; // set this if used inside of db-update
@@ -79,6 +78,7 @@
         "type",
         "table",
         "values",
+        "service",
         "selected",
         "silent"
       ];
@@ -132,6 +132,9 @@
       }
       if (name === "field") {
         this.field = newValue;
+      }
+      if (name === "service") {
+        this.service = newValue;
       }
       if (name === "silent") {
         this.silent = newValue;
@@ -202,7 +205,7 @@
           "Content-Type": "application/json"
         }
       };
-      fetch("/runsql", init)
+      fetch(this.service, init)
         .then(r => r.json())
         .then(data => {
           console.log(data);

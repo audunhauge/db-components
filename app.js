@@ -1,12 +1,42 @@
 // @ts-check
-const CONNECTSTRING = "postgres://shop:123@localhost/shop";
-const PORT = 3000;
+const fs = require("fs");
+
+let project = "";
+let siteinf = {};
+if (process.argv[2]) {
+  project = process.argv[2];
+} else {
+  console.log("Velg et prosjekt - skriv:  node app.js mappe")
+  let files = fs.readdirSync("public");
+  let items = files.filter(e => e !== "components" && e !== "users");
+  console.log("Tilgjengelige Mapper: ", items.join());
+  process.exit(1);
+  // throw new Error("prosjektmappe må oppgis");
+}
+try {
+  let conf = fs.readFileSync(`public/${project}/${project}.json`, { encoding: "utf-8" });
+  siteinf = JSON.parse(conf);
+} catch (err) {
+  console.log(`Fant ikke filen ${project}.json i mappa ${project}`);
+  console.log(`Denne filen må finnes, skal inneholde
+  {
+     "CONNECTSTRING" : "postgres://bruker:passord@localhost/database",
+     "PORT" : 3000,
+     "PROJECT" : "${project}"
+  }
+  `);
+  console.log(err.message);
+  process.exit(1);
+}
+
+const CONNECTSTRING = siteinf.CONNECTSTRING;
+const PORT = siteinf.PORT;
 const express = require("express");
 const pgp = require("pg-promise")();
 const db = pgp(CONNECTSTRING);
 const app = express();
 const bodyParser = require("body-parser");
-const fs = require("fs");
+
 const cookieParser = require("cookie-parser");
 const session = require("express-session");
 const passport = require("passport");
@@ -48,12 +78,11 @@ async function lagBrukerliste() {
     userlist[userid] = {
       id: userid,
       username: "admin",
-      role:"admin",
+      role: "admin",
       password: umd5("1230")
     };
     _username2id["admin"] = userid;
   }
-  console.log(userlist);
 }
 
 function findByUsername(rbody, username, cb) {
@@ -61,13 +90,11 @@ function findByUsername(rbody, username, cb) {
     if (_username2id[username]) {
       let userid = _username2id[username];
       let user = _usersById(userid);
-      console.log(userlist[userid], userid, user);
       return cb(null, user);
     }
     return cb(null, null);
   });
 }
-app.use(express.static("public"));
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -160,7 +187,7 @@ app.post("/makeuser", function (req, res) {
         newuser.role &&
         newuser.password
       ) {
-        makeNewUser(newuser,false);
+        makeNewUser(newuser, false);
       }
     }
   }
@@ -280,7 +307,7 @@ async function getuinf(sql, res) {
 }
 
 async function saferSQL(res, obj, options) {
-  const predefined = [];  // add acceptes sql here
+  const predefined = [];  // add accepted sql here
   let results = { error: "Illegal sql" };
   let tables = options.tables.split(",");
   let sql = obj.sql.replace("inner ", "");
@@ -301,9 +328,20 @@ async function saferSQL(res, obj, options) {
   res.send({ results });
 }
 
-app.get("/admin/:file", Ensure.ensureLoggedIn(), function (req, res) {
+app.get(`/components/:file`, function (req, res) {
   let { file } = req.params;
-  res.sendFile(__dirname + `/admin/${file}`);
+  res.sendFile(__dirname + `/public/components/${file}`);
+});
+
+app.get(`/users/:file`, function (req, res) {
+  let { file } = req.params;
+  res.sendFile(__dirname + `/public/users/${file}`);
+});
+
+
+app.get(`/admin/:file`, Ensure.ensureLoggedIn(), function (req, res) {
+  let { file } = req.params;
+  res.sendFile(__dirname + `/public/${project}/admin/${file}`);
 });
 
 app.get("/myself", function (req, res) {
@@ -317,19 +355,22 @@ app.get("/myself", function (req, res) {
 });
 
 app.get("/htmlfiler/:admin", function (req, res) {
-  let path = "public";
+  let path = `public/${project}`;
   if (req.user) {
     let { username } = req.user;
     let { admin } = req.params;
     if (username && admin === "admin") {
-      path = "admin";
+      path = `public/${project}/admin`;
     }
   }
   fs.readdir(path, function (err, files) {
+    //console.log(err);
     let items = files.filter(e => e.endsWith(".html") && e !== "index.html");
     res.send({ items });
   });
 });
+
+app.use(express.static(`public/${project}`));
 
 app.listen(3000, function () {
   console.log(`Connect to http://localhost:${PORT}`);
@@ -351,10 +392,7 @@ async function safesql(user, res, obj) {
     let userinfo = userlist[user.id];
     if (userinfo.kundeid) {
       let good = [
-        `insert into bestilling (dato,kundeid) values ($[dato],$[kundeid])`,
-        `insert into linje (antall,bestillingid,vareid) values ($[antall],$[bestillingid],$[vareid])`,
-        `delete from linje where linjeid in`,
-        `delete from bestilling where besti`,
+
       ];
       // the last two delete test are insufficient
       // the inserts do not test for valid id of customer
@@ -404,3 +442,42 @@ async function runsql(res, obj) {
     });
   res.send({ results });
 }
+
+/**
+ * Eksempel på hvordan en kan lage sikre endepunkter som 
+ * er kobla til en gitt db-component som skal kjøre en spesifikk
+ * spørring. Under testing er komponenten kobla til /runsql.
+ * Når vi ser at ting fungerer, kan vi lage et dedikert endepunkt
+ * som kjører denne spørringen på en sikker måte.
+ * MERK: her kjøres ikke en brukergenerert spørring, men en
+ * spørring definert av utvikler. Det eneste som varierer er
+ * id på bestilling og id på bruker. 
+ * Brukerid hentes fra session info, spørringen sjekker at
+ * brukeren er eier av denne bestillingen.
+ * Så lenge som server + passord/innlogging
+ * er sikkert, vil også spørringen være sikker.
+ */
+
+/* hent en gitt bestilling for en kunde 
+   kan ikke hente andre kunders bestillinger
+*/
+app.post("/brukerbestilling", function (req, res) {
+  const user = req.user;
+  const userinfo = userlist[user.id] || {};
+  const data = req.body.data;
+  if (data && req.isAuthenticated() && userinfo.kundeid) {
+    const bid = Number(data.bestillingid);
+    const kundeid = Number(userinfo.kundeid);
+    if (Number.isInteger(bid) && Number.isInteger(kundeid)) {
+      const sql = `select v.*,l.*,b.dato from vare v join
+      linje l on (v.vareid = l.vareid)
+      join bestilling b on (l.bestillingid = b.bestillingid)
+      where b.bestillingid = ${bid}
+            and b.kundeid = ${kundeid}
+    `;
+      runsql(res, { sql, data });
+      return;
+    }
+  }
+  res.send({ error: "illegal" })
+});

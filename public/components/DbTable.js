@@ -97,9 +97,8 @@
   class DBTable extends HTMLElement {
     constructor() {
       super();
-      const now = new Date();
       this.selectedRow;
-      this.signature = this.id + "_" + now.getMilliseconds();
+      this.service = "/runsql"; // default service
       this.rows = []; // data from sql
       this.key = "";
       this.silent = ""; // emit no events
@@ -147,6 +146,7 @@
         "update",
         "key",
         "connected",
+        "service",
         "delete",
         "silent"
       ];
@@ -216,7 +216,9 @@
               if (sql.includes("where") || !Number.isInteger(intvalue)) return; // do nothing
               sql += ` where ${field} = ${intvalue}`; // value is integer
               this.refsql = sql; // reuse if refreshed by update
-              this.redraw(sql);
+              const data = {};
+              data[field] = intvalue;
+              this.redraw(sql,data);
             } else {
               // we must redraw as empty
               const divBody = this._root.querySelector("#tbody");
@@ -229,6 +231,9 @@
       }
       if (name === "sql") {
         this.sql = newValue;
+      }
+      if (name === "service") {
+        this.service = newValue;
       }
       if (name === "silent") {
         this.silent = newValue;
@@ -265,7 +270,7 @@
               "Content-Type": "application/json"
             }
           };
-          fetch("/runsql", init)
+          fetch(this.service, init)
             .then(r => r.json())
             .then(data => {
               const list = data.results; // check for errors
@@ -275,7 +280,7 @@
                 htmltable.title = sql + "\n" + list.error;
                 return;
               } else {
-                this.trigger({ sig:this.signature, delete: true, table });
+                this.trigger({ delete: true, table });
               }
             })
             .catch(e => console.log(e.message));
@@ -283,7 +288,7 @@
       }
     }
 
-    redraw(sql) {
+    redraw(sql,data = {}) {
       this.selectedRow = undefined;
       const divBody = this._root.querySelector("#tbody");
       if (this.sql && divBody) {
@@ -291,12 +296,12 @@
         const init = {
           method: "POST",
           credentials: "include",
-          body: JSON.stringify({ sql }),
+          body: JSON.stringify({ sql ,data}),
           headers: {
             "Content-Type": "application/json"
           }
         };
-        fetch("/runsql", init)
+        fetch(this.service, init)
           .then(r => r.json())
           .then(data => {
             // console.log(data);

@@ -140,8 +140,7 @@
   class DBUpdate extends HTMLElement {
     constructor() {
       super();
-      const now = new Date();
-      this.signature = this.id + "_" + now.getMilliseconds();
+      this.service = "/runsql"; // default service
       this.rows = [];
       this.silent = "";
       this.types = {}; // fields need typing so we can store dates and number correctly
@@ -218,6 +217,7 @@
         "fields",
         "foreign",
         "update",
+        "service",
         "connected",
         "silent"
       ];
@@ -304,6 +304,9 @@
       }
       if (name === "table") {
         this.table = newValue;
+      }
+      if (name === "service") {
+        this.service = newValue;
       }
       if (name === "silent") {
         this.silent = newValue;
@@ -397,7 +400,7 @@
             "Content-Type": "application/json"
           }
         };
-        fetch("/runsql", init)
+        fetch(this.service, init)
           .then(r => r.json())
           .then(data => {
             // console.log(data);
@@ -451,10 +454,10 @@
         }
       };
       //console.log(sql, data);
-      fetch("/runsql", init)
+      fetch(this.service, init)
         .then(() => {
           // others may want to refresh view
-          this.trigger({ sig: this.signature, table: this.table });
+          this.trigger({ table: this.table });
           this.show();
         })
         .catch(e => console.log(e.message));
