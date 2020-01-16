@@ -7,14 +7,14 @@ if (process.argv[2]) {
   project = process.argv[2];
 } else {
   console.log("Velg et prosjekt - skriv:  node app.js mappe")
-  let files = fs.readdirSync("public");
-  let items = files.filter(e => e !== "components" && e !== "users");
+  const files = fs.readdirSync("public");
+  const items = files.filter(e => e !== "components" && e !== "users");
   console.log("Tilgjengelige Mapper: ", items.join());
   process.exit(1);
   // throw new Error("prosjektmappe må oppgis");
 }
 try {
-  let conf = fs.readFileSync(`public/${project}/${project}.json`, { encoding: "utf-8" });
+  const conf = fs.readFileSync(`public/${project}/${project}.json`, { encoding: "utf-8" });
   siteinf = JSON.parse(conf);
 } catch (err) {
   console.log(`Fant ikke filen ${project}.json i mappa ${project}`);
@@ -55,7 +55,7 @@ const _usersById = id => {
 };
 
 async function lagBrukerliste() {
-  let sql = `select u.*,k.kundeid from users u left join kunde k
+  const sql = `select u.*,k.kundeid from users u left join kunde k
             on (u.userid = k.userid)`;
   await db
     .any(sql)
@@ -72,9 +72,9 @@ async function lagBrukerliste() {
     });
   // ensure admin user always exists
   if (!_username2id["admin"]) {
-    let sql = `insert into users (username,role,password)
+    const sql = `insert into users (username,role,password)
      values ('admin','admin','${umd5("1230")}') returning userid`;
-    let { userid } = await db.one(sql);
+    const { userid } = await db.one(sql);
     userlist[userid] = {
       id: userid,
       username: "admin",
@@ -88,8 +88,8 @@ async function lagBrukerliste() {
 function findByUsername(rbody, username, cb) {
   process.nextTick(function () {
     if (_username2id[username]) {
-      let userid = _username2id[username];
-      let user = _usersById(userid);
+      const userid = _username2id[username];
+      const user = _usersById(userid);
       return cb(null, user);
     }
     return cb(null, null);
@@ -178,10 +178,10 @@ app.post(
 
 app.post("/makeuser", function (req, res) {
   if (req.isAuthenticated()) {
-    let user = req.user;
-    let userinfo = userlist[user.id] || {};
+    const user = req.user;
+    const userinfo = userlist[user.id] || {};
     if (userinfo.role === "admin") {
-      let newuser = req.body;
+      const newuser = req.body;
       if (
         newuser.username &&
         newuser.role &&
@@ -195,7 +195,7 @@ app.post("/makeuser", function (req, res) {
 });
 
 app.post("/signup", function (req, res) {
-  let user = req.body;
+  const user = req.body;
   if (
     user.username &&
     user.fornavn &&
@@ -273,11 +273,11 @@ app.post("/verify", function (req, res) {
 
 /* runsql can only be used by auth users */
 app.post("/runsql", function (req, res) {
-  let user = req.user;
-  let data = req.body;
+  const user = req.user;
+  const data = req.body;
   if (req.isAuthenticated()) {
     // check if user has role admin
-    let userinfo = userlist[user.id] || {};
+    const userinfo = userlist[user.id] || {};
     if (userinfo.role === "admin") {
       runsql(res, data);
     } else {
@@ -291,10 +291,10 @@ app.post("/runsql", function (req, res) {
 
 // delivers userinfo about logged in user
 app.post("/userinfo", function (req, res) {
-  let user = req.user;
-  let data = req.body;
+  const user = req.user;
+  const data = req.body;
   if (req.isAuthenticated()) {
-    let sql = data.sql + ` from kunde where userid=${user.id}`;
+    const sql = data.sql + ` from kunde where userid=${user.id}`;
     getuinf(sql, res);
   } else {
     res.send({ error: "player unknown b." });
@@ -302,18 +302,19 @@ app.post("/userinfo", function (req, res) {
 });
 
 async function getuinf(sql, res) {
-  let userinfo = await db.one(sql);
+  const list = await db.any(sql);
+  const userinfo = list.length ? list[0] : {};
   res.send(userinfo);
 }
 
 async function saferSQL(res, obj, options) {
   const predefined = [];  // add accepted sql here
-  let results = { error: "Illegal sql" };
-  let tables = options.tables.split(",");
-  let sql = obj.sql.replace("inner ", "");
+  const results = { error: "Illegal sql" };
+  const tables = options.tables.split(",");
+  const sql = obj.sql.replace("inner ", "");
   // inner join => join
-  let data = obj.data;
-  let allowed = predefined.concat(tables.map(e => `select * from ${e}`));
+  const data = obj.data;
+  const allowed = predefined.concat(tables.map(e => `select * from ${e}`));
   if (allowed.includes(sql)) {
     await db
       .any(sql, data)
@@ -329,25 +330,25 @@ async function saferSQL(res, obj, options) {
 }
 
 app.get(`/components/:file`, function (req, res) {
-  let { file } = req.params;
+  const { file } = req.params;
   res.sendFile(__dirname + `/public/components/${file}`);
 });
 
 app.get(`/users/:file`, function (req, res) {
-  let { file } = req.params;
+  const { file } = req.params;
   res.sendFile(__dirname + `/public/users/${file}`);
 });
 
 
 app.get(`/admin/:file`, Ensure.ensureLoggedIn(), function (req, res) {
-  let { file } = req.params;
+  const { file } = req.params;
   res.sendFile(__dirname + `/public/${project}/admin/${file}`);
 });
 
 app.get("/myself", function (req, res) {
-  let user = req.user;
+  const user = req.user;
   if (user) {
-    let { username } = req.user;
+    const { username } = req.user;
     res.send({ username });
   } else {
     res.send({ username: "" });
@@ -357,15 +358,15 @@ app.get("/myself", function (req, res) {
 app.get("/htmlfiler/:admin", function (req, res) {
   let path = `public/${project}`;
   if (req.user) {
-    let { username } = req.user;
-    let { admin } = req.params;
+    const { username } = req.user;
+    const { admin } = req.params;
     if (username && admin === "admin") {
       path = `public/${project}/admin`;
     }
   }
   fs.readdir(path, function (err, files) {
     //console.log(err);
-    let items = files.filter(e => e.endsWith(".html") && e !== "index.html");
+    const items = files.filter(e => e.endsWith(".html") && e !== "index.html");
     res.send({ items });
   });
 });
@@ -379,9 +380,9 @@ app.listen(3000, function () {
 
 async function safesql(user, res, obj) {
   let results;
-  let sql = obj.sql;
-  let lowsql = "" + sql.toLowerCase();
-  let data = obj.data;
+  const sql = obj.sql;
+  const lowsql = "" + sql.toLowerCase();
+  const data = obj.data;
   let unsafe = false;
   let personal = false;
 
@@ -389,7 +390,7 @@ async function safesql(user, res, obj) {
   // but this allows testing with a semblance of sequrity.
   // Studs can see that some sql will be disallowed
   if (user && user.id) {
-    let userinfo = userlist[user.id];
+    const userinfo = userlist[user.id];
     if (userinfo.kundeid) {
       let good = [
 
@@ -429,8 +430,8 @@ async function safesql(user, res, obj) {
 // allow admin to do anything
 async function runsql(res, obj) {
   let results;
-  let sql = obj.sql;
-  let data = obj.data;
+  const sql = obj.sql;
+  const data = obj.data;
   await db
     .any(sql, data)
     .then(data => {
