@@ -57,6 +57,13 @@
           font-size: 0.9em;
           padding-right:3px;
         }
+        form.error  {
+          box-shadow: inset 0 0 5px red, 0 0 0 orange;
+          animation: pulse 1s alternate infinite;
+        }
+        @keyframes pulse {
+          100% { box-shadow: inset 0 0 2px black, 0 0 6px red; }
+        }
         
         #lagre {
             background-color: antiquewhite;
@@ -263,11 +270,26 @@
       };
       console.log(sql, data);
       fetch(this.service, init)
+      .then(r => r.json())
+            .then(data => {
+              const list = data.results; // check for errors
+              const htmltable = this._root.querySelector("form");
+              if (list.error) {
+                htmltable.classList.add("error");
+                htmltable.title = sql + "\n" + list.error;
+                return;
+              } else {
+                this.trigger({ table: this.table, insert: true })
+              }
+            })
+            .catch(e => console.log(e.message));
+      /*
         .then(
           () =>
             this.trigger({ table: this.table, insert: true })
         )
         .catch(e => console.log(e.message));
+        */
     }
   }
 

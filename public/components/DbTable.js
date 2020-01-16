@@ -16,7 +16,7 @@
             }
             td,th {
               border: solid gray 1px;
-              padding: 2px;
+              padding: 3px;
             }
             tr:nth-child(odd) {
               background-color: var(--alternate, lightsteelblue);

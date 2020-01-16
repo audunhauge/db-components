@@ -1,0 +1,7 @@
+{
+  "CONNECTSTRING" : "postgres://tannlege:123@localhost/tannlege",
+  "PORT" : 3001,
+  "PROJECT" : "tannlege",
+  "OPEN_TABLES" : "tannlege",
+  "ALLOWED_SQL" : [ "select dato from behandling order by dato"]
+}

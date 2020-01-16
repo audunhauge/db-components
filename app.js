@@ -233,7 +233,7 @@ app.post("/signup", function (req, res) {
 async function makeNewUser(user, kunde = true) {
   let failed = false;
   const sql = `insert into users (username,role,password)
-  values ('${user.username}','user','${umd5(user.password)}') returning userid`;
+  values ('${user.username}','${user.role}','${umd5(user.password)}') returning userid`;
   const { userid } = await db.one(sql).catch(error => {
     console.log(error.message);
     failed = true;
@@ -241,6 +241,7 @@ async function makeNewUser(user, kunde = true) {
   if (failed) return;
   userlist[userid] = {
     id: userid,
+    role: user.role,
     username: user.username,
     password: umd5(user.password)
   };
@@ -285,7 +286,7 @@ app.post("/runsql", function (req, res) {
     }
   } else {
     // much restricted
-    saferSQL(res, data, { tables: "vare" });
+    saferSQL(res, data, { tables: siteinf.OPEN_TABLES || "" });
   }
 });
 
@@ -308,8 +309,8 @@ async function getuinf(sql, res) {
 }
 
 async function saferSQL(res, obj, options) {
-  const predefined = [];  // add accepted sql here
-  const results = { error: "Illegal sql" };
+  const predefined = siteinf.ALLOWED_SQL || [];  // add accepted sql in projectname.json
+  let results = { error: "Illegal sql" };
   const tables = options.tables.split(",");
   const sql = obj.sql.replace("inner ", "");
   // inner join => join
@@ -373,7 +374,7 @@ app.get("/htmlfiler/:admin", function (req, res) {
 
 app.use(express.static(`public/${project}`));
 
-app.listen(3000, function () {
+app.listen(PORT, function () {
   console.log(`Connect to http://localhost:${PORT}`);
   lagBrukerliste();
 });
@@ -392,12 +393,8 @@ async function safesql(user, res, obj) {
   if (user && user.id) {
     const userinfo = userlist[user.id];
     if (userinfo.kundeid) {
-      let good = [
-
-      ];
-      // the last two delete test are insufficient
-      // the inserts do not test for valid id of customer
-      if (good.includes(lowsql) || good.includes(lowsql.substr(0, 34))) {
+      let good = siteinf.ALLOWED_SQL || [  ];
+      if (good.includes(lowsql) ) {
         personal = true;
       }
     }
@@ -413,18 +410,21 @@ async function safesql(user, res, obj) {
   unsafe = unsafe || lowsql.includes("alter");
   unsafe = unsafe || lowsql.includes("drop");
   if (unsafe && !personal) {
-    results = {};
-  } else
+    results = {error: `This sql not allowed for ${user.username}` };
+    res.send({ results });
+  } else 
     await db
       .any(sql, data)
       .then(data => {
         results = data;
+        res.send({ results });
       })
       .catch(error => {
         console.log("ERROR:", sql, ":", error.message); // print error;
         results = { error: error.message };
+        res.send({ results });
       });
-  res.send({ results });
+  
 }
 
 // allow admin to do anything

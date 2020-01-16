@@ -1,8 +1,8 @@
 // @ts-check
 
-(function() {
+(function () {
 
-  
+
   const template = document.createElement("template");
   template.innerHTML = `
           <style>
@@ -56,7 +56,7 @@
     }
 
     /**
-     * foreign  the foreign key connected to this select (book.bookid)
+     * foreign  the foreign key connected to this select (book.bookid), must be returned by sql
      * field    the field that supplies text for choosing (book.title to choose book.bookid)
      * label    shown as text before select
      * sql      sql that supplies a list of (foreign,field) to feed into make-select
@@ -88,7 +88,7 @@
       // only one value - can't change so trigger in a little while
       // wait for other components to exist
       // can use
-      if (this.mono && this.sql === "")
+      if (this.mono)
         setTimeout(
           () => this.trigger({ field: this.field }, `dbFrom-${this.id}`),
           300
@@ -210,9 +210,17 @@
         .then(data => {
           console.log(data);
           const list = data.results;
+          let topElement = '<option value="">..velg..</option>';
           if (list.length) {
+            if (list.length === 1) {
+              setTimeout(
+                () => this.trigger({ field: this.field }, `dbFrom-${this.id}`),
+                300
+              );
+              topElement = '';
+            }
             const options =
-              '<option value="">..velg..</option>' +
+              topElement +
               list
                 .map(e => `<option value="${e[foreign]}">${e[field]}</option>`)
                 .join("");
