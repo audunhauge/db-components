@@ -1,7 +1,34 @@
 {
-  "CONNECTSTRING" : "postgres://tannlege:123@localhost/tannlege",
-  "PORT" : 3001,
-  "PROJECT" : "tannlege",
-  "OPEN_TABLES" : "tannlege",
-  "ALLOWED_SQL" : [ "select dato from behandling order by dato"]
+  "CONNECTSTRING": "postgres://tannlege:123@localhost/tannlege",
+  "PORT": 3001,
+  "PROJECT": "tannlege",
+  "OPEN_TABLES": "tannlege" ,
+  "SELFREG": { "table":"kunde", "fields":"fornavn,etternavn,adresse", "key":"kundeid" },
+  "DEFAULT_ROLE" : "kunde",
+  "INFO": "LEVEL3 is any user, LEVEL2 is user with role, LEVEL1 is named user, LEVEL0 is admin",
+  "LEVEL3": [
+    "select dato from behandling order by dato"
+  ],
+  "LEVEL2": {
+    "tannlege": [
+      "select * from behandling where tannlegeid=#user#",
+      "select * from kunde",
+      "select * from tannlege",
+      "select kundeid,fornavn,etternavn from kunde order by fornavn,etternavn",
+      "select tannlegeid,fornavn,etternavn from tannlege order by fornavn,etternavn",
+      "insert into behandling (dato,pris,betalt,kundeid,tannlegeid) values ($[dato],$[pris],$[betalt],$[kundeid],$[tannlegeid])",
+      "delete from behandling where behandlingid in ()"
+    ],
+    "kunde": [
+      "select * from behandling where kundeid=#user#"
+    ]
+  },
+  "LEVEL1": {
+    "siri": [
+      "select * from behandling",
+      "select * from kunde",
+      "select * from tannlege",
+      "select b.*,t.fornavn as tannlege, k.fornavn as kunde from behandling b join kunde k on (b.kundeid=k.kundeid) join tannlege t on (t.tannlegeid=b.tannlegeid)"
+    ]
+  }
 }

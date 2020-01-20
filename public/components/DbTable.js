@@ -86,8 +86,15 @@
       case "int":
         return { type: "number", value: Math.trunc(+value) };
       case "date":
-        const date = value == null ? "" : value.split("T")[0];
-        return { type, value: date };
+      case "time":
+        if (value == null) {
+          return "";
+        }
+        const now = new Date(value);
+        return { type, value: type === "date" ? now.toJSON().substr(0,10) : now.toTimeString().substr(0,8)};
+      case "time":
+          const time = value == null ? "" : value.split("T")[1].replace('Z','');
+          return { type, value: time };
       default:
         const cleanValue = value === null ? "" : value;
         return { type, value: cleanValue };

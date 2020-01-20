@@ -68,6 +68,13 @@
         #lagre {
             background-color: antiquewhite;
         }
+        .error {
+          box-shadow: inset 0 0 5px red, 0 0 0 orange;
+          animation: pulse 1s alternate infinite;
+        }
+        @keyframes pulse {
+          100% { box-shadow: inset 0 0 2px black, 0 0 6px red; }
+        }
         </style>
         <form>
           <div class="heading"><slot name="heading"></slot></div>
@@ -128,7 +135,8 @@
     /**
      * table      listen for updates on this table if set
      * fields     the fields to show in form
-     * foreign    the foreign key connected to this select (book.bookid)
+     * foreign    the foreign key connected to this select (local#book.bookid:title)
+     *            local is field in this table (usually the same as bookid), select bookid,title from book
      * connected  listen for event emitted by this component
      * silent     dont emitt events
      */
@@ -198,16 +206,24 @@
       }
       if (name === "foreign") {
         divForeign.innerHTML = "";
+        // example value   "teachid#users.userid:firstname+lastname"
+        //   local field is teachid, value given by users.userid, select shows firstname lastname
         const fieldlist = newValue.split(",");
         for (let i = 0; i < fieldlist.length; i++) {
-          const [table, fields] = fieldlist[i].split(".");
-          let [field, use] = fields.split(":");
-          use = (use || field).replace("+", ",");
+          let [localname,xs] = fieldlist[i].split("#");
+          if (xs === undefined) {
+            xs = localname; localname = undefined;
+          }  // localname is fieldname in insert-target
+          // can be left out, will then match othertable.foreignkey
+          const [table, fields] = xs.split(".");
+          let [field, use] = fields.split(":");     // use is/are field(s) to show in select, username for userid
+          use = (use || field).replace("+", ",");   // the extra fields are sep by '+'  userid:firstname+lastname
+          localname = localname || field;
           const text = table.charAt(0).toUpperCase() + table.substr(1);
           const label = document.createElement("label");
-          label.innerHTML = `${text} <span class="foreign">${field} </span> <select id="${field}"></select>`;
+          label.innerHTML = `${text} <span class="foreign">${field} </span> <select id="${localname}"></select>`;
           divForeign.appendChild(label);
-          this.makeSelect(table, field, use);
+          this.makeSelect(table, field, use, localname);
         }
       }
     }
@@ -226,8 +242,9 @@
 
     // assumes foreign key has same name in both tables
     // bok.forfatterid references forfatter.forfatterid
-    makeSelect(table, field, use) {
-      const fields = field === use ? field : `${field}, ${use}`;
+    makeSelect(table, field, use, localname) {
+      const select = this._root.querySelector(`#${localname}`);
+      const fields = field === use ? field : `${field},${use}`;
       const sql = `select ${fields} from ${table} order by ${use}`;
       const data = "";
       const init = {
@@ -244,6 +261,10 @@
           console.log(data);
           const list = data.results;
           const labels = use.split(",");
+          if (list.error) {
+            select.classList.add("error");
+            select.title = sql + "\n" + list.error;
+          }
           if (list.length) {
             const options = list
               .map(
@@ -253,10 +274,9 @@
                     .join(" ")}</option>`
               )
               .join("");
-            this._root.querySelector(`#${field}`).innerHTML = options;
+              select.innerHTML = options;
           }
-        });
-      //.catch(e => console.log(e.message));
+        }); // .catch(e => console.log(e.message));
     }
 
     upsert(sql = "", data) {

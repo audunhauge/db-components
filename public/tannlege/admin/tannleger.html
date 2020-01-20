@@ -29,7 +29,7 @@
                     <span slot="caption">Tannleger</span>
                 </db-table>
 
-                <db-insert id="tann" fields="fornavn,etternavn" foreign="users.userid:username"
+                <db-insert id="tann" fields="fornavn,etternavn" foreign="tannlegeid#users.userid:username"
                     table="tannlege">
                     <span slot="heading">Legg til tannlege</span>
                 </db-insert>

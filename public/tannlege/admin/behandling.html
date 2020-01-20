@@ -23,14 +23,14 @@
         <div id="admin">
 
             <db-table " update="behandling"  
-                fields="dato:date,pris:money,betalt:boolean,kunde,tannlege" 
+                fields="behandlingid:hidden,dato:date,pris:money,betalt:boolean,kunde,tannlege,dato:time" 
                 delete="behandling"
                 sql="select b.*,t.fornavn as tannlege, k.fornavn as kunde from behandling b join kunde k on (b.kundeid=k.kundeid) 
                   join tannlege t on (t.tannlegeid=b.tannlegeid)">
                 <span slot="caption">Behandlinger</span>
             </db-table>
 
-            <db-insert table="behandling" fields="dato:date,pris:money,betalt:checkbox"
+            <db-insert table="behandling" fields="dato:date,pris:number,betalt:checkbox"
                 foreign="kunde.kundeid:fornavn+etternavn,tannlege.tannlegeid:fornavn+etternavn">
             </db-insert>
 

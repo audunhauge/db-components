@@ -25,26 +25,24 @@ create table users (
 
 -- customer
 CREATE TABLE kunde (
-  kundeid SERIAL PRIMARY KEY,
+  kundeid int PRIMARY KEY,
   fornavn text NOT NULL,
   etternavn text NOT NULL,
   adresse text,
   epost text,
   tlf text,
-  kjonn text,
-  userid int unique not null
+  kjonn text
 );
 
 -- tannlege
 CREATE TABLE tannlege (
-  tannlegeid SERIAL PRIMARY KEY,
+  tannlegeid int PRIMARY KEY,
   fornavn text NOT NULL,
   etternavn text NOT NULL,
   adresse text,
   epost text,
   tlf text,
-  kjonn text,
-  userid int unique not null
+  kjonn text
 );
 
 -- order
@@ -60,8 +58,8 @@ CREATE TABLE  behandling  (
 
 ALTER TABLE  behandling  ADD FOREIGN KEY ( kundeid ) REFERENCES  kunde  ( kundeid );
 ALTER TABLE  behandling  ADD FOREIGN KEY ( tannlegeid ) REFERENCES  tannlege  ( tannlegeid );
-ALTER TABLE  kunde  ADD FOREIGN KEY ( userid ) REFERENCES  users  ( userid );
-ALTER TABLE  tannlege  ADD FOREIGN KEY ( userid ) REFERENCES  users  ( userid );
+ALTER TABLE  kunde  ADD FOREIGN KEY ( kundeid ) REFERENCES  users  ( userid );
+ALTER TABLE  tannlege  ADD FOREIGN KEY ( tannlegeid ) REFERENCES  users  ( userid );
 
 
 alter table behandling owner to tannlege;

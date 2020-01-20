@@ -6,7 +6,7 @@ let siteinf = {};
 if (process.argv[2]) {
   project = process.argv[2];
 } else {
-  console.log("Velg et prosjekt - skriv:  node app.js mappe")
+  console.log("Velg et prosjekt - skriv:  node app.js mappe");
   const files = fs.readdirSync("public");
   const items = files.filter(e => e !== "components" && e !== "users");
   console.log("Tilgjengelige Mapper: ", items.join());
@@ -14,7 +14,9 @@ if (process.argv[2]) {
   // throw new Error("prosjektmappe må oppgis");
 }
 try {
-  const conf = fs.readFileSync(`public/${project}/${project}.json`, { encoding: "utf-8" });
+  const conf = fs.readFileSync(`public/${project}/${project}.json`, {
+    encoding: "utf-8"
+  });
   siteinf = JSON.parse(conf);
 } catch (err) {
   console.log(`Fant ikke filen ${project}.json i mappa ${project}`);
@@ -55,14 +57,13 @@ const _usersById = id => {
 };
 
 async function lagBrukerliste() {
-  const sql = `select u.*,k.kundeid from users u left join kunde k
-            on (u.userid = k.userid)`;
+  const sql = `select * from users`;
   await db
     .any(sql)
     .then(data => {
       if (data && data.length) {
-        data.forEach(({ userid, username, role, password, kundeid }) => {
-          userlist[userid] = { id: userid, username, role, password, kundeid };
+        data.forEach(({ userid, username, role, password }) => {
+          userlist[userid] = { id: userid, username, role, password };
           _username2id[username] = userid;
         });
       }
@@ -86,7 +87,7 @@ async function lagBrukerliste() {
 }
 
 function findByUsername(rbody, username, cb) {
-  process.nextTick(function () {
+  process.nextTick(function() {
     if (_username2id[username]) {
       const userid = _username2id[username];
       const user = _usersById(userid);
@@ -100,13 +101,13 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 passport.use(
-  new Strategy({ passReqToCallback: true }, function (
+  new Strategy({ passReqToCallback: true }, function(
     req,
     username,
     password,
     cb
   ) {
-    findByUsername(req.body, username, function (err, user, key = "") {
+    findByUsername(req.body, username, function(err, user, key = "") {
       if (err) {
         return cb(err);
       }
@@ -121,12 +122,12 @@ passport.use(
   })
 );
 
-passport.serializeUser(function (user, cb) {
+passport.serializeUser(function(user, cb) {
   cb(null, user.id);
 });
 
-passport.deserializeUser(function (id, cb) {
-  findById(id, function (err, user) {
+passport.deserializeUser(function(id, cb) {
+  findById(id, function(err, user) {
     if (err) {
       return cb(err);
     }
@@ -135,7 +136,7 @@ passport.deserializeUser(function (id, cb) {
 });
 
 function findById(id, cb) {
-  process.nextTick(function () {
+  process.nextTick(function() {
     if (_usersById(id)) {
       cb(null, _usersById(id));
     } else {
@@ -164,7 +165,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // Define routes.
-app.get("/login", function (req, res) {
+app.get("/login", function(req, res) {
   res.redirect("/users/login.html");
 });
 
@@ -176,35 +177,23 @@ app.post(
   })
 );
 
-app.post("/makeuser", function (req, res) {
+app.post("/makeuser", function(req, res) {
   if (req.isAuthenticated()) {
     const user = req.user;
     const userinfo = userlist[user.id] || {};
     if (userinfo.role === "admin") {
       const newuser = req.body;
-      if (
-        newuser.username &&
-        newuser.role &&
-        newuser.password
-      ) {
+      if (newuser.username && newuser.role && newuser.password) {
         makeNewUser(newuser, false);
       }
     }
   }
-  res.redirect('/admin/users.html');
+  res.redirect("/admin/users.html");
 });
 
-app.post("/signup", function (req, res) {
+app.post("/signup", function(req, res) {
   const user = req.body;
-  if (
-    user.username &&
-    user.fornavn &&
-    user.etternavn &&
-    user.etternavn &&
-    user.epost &&
-    user.adresse &&
-    user.password
-  ) {
+  if (user.username && user.password) {
     // valid user
     if (_username2id[user.username]) {
       res.redirect("/users/signup.html?message=taken");
@@ -214,7 +203,11 @@ app.post("/signup", function (req, res) {
       do {
         token = ("" + Math.random()).substr(2, 6);
       } while (newusers[token]);
-      newusers[token] = user;
+      const clean = {};
+      Object.entries(user).forEach(
+        ([k, v]) => (clean[k] = v.replace(/[`'";]/g, ""))
+      );
+      newusers[token] = clean;
       res.redirect(`/users/verify.html?token=${token}`);
       // Simulated token sent by email to users adress.
       // Appended as param on redirect
@@ -232,12 +225,15 @@ app.post("/signup", function (req, res) {
  */
 async function makeNewUser(user, kunde = true) {
   let failed = false;
+  const role = user.role || siteinf.DEFAULT_ROLE || "user";
   const sql = `insert into users (username,role,password)
-  values ('${user.username}','${user.role}','${umd5(user.password)}') returning userid`;
+  values ('${user.username}','${role}','${umd5(
+    user.password
+  )}') returning userid`;
   const { userid } = await db.one(sql).catch(error => {
     console.log(error.message);
     failed = true;
-  })
+  });
   if (failed) return;
   userlist[userid] = {
     id: userid,
@@ -246,21 +242,24 @@ async function makeNewUser(user, kunde = true) {
     password: umd5(user.password)
   };
   _username2id[user.username] = userid;
-  if (kunde) {
+  if (kunde && siteinf.SELFREG) {
     // insert new user as kunde
-    const sql = `insert into kunde (userid,fornavn,etternavn,adresse,epost)
-           values (${userid},'${user.fornavn}',
-           '${user.etternavn}','${user.adresse}','${user.epost}') returning kundeid`;
-    const { kundeid } = await db.one(sql).catch(error => {
+    const self = siteinf.SELFREG;
+    const values = self.fields
+      .split(",")
+      .map(e => user[e])
+      .map(e => e.replace(/['";`]/g, ""))
+      .map(e => (Number.isInteger(Number(e)) ? Number(e) : `'${e}'`))
+      .join();
+    const sql = `insert into ${self.table} (${self.key},${self.fields})
+           values (${userid},${values}) `;
+    await db.any(sql).catch(error => {
       console.log(error.message);
-      failed = true;
-    })
-    if (failed) return;
-    userlist[userid].kundeid = kundeid;
+    });
   }
 }
 
-app.post("/verify", function (req, res) {
+app.post("/verify", function(req, res) {
   let { token } = req.body;
   if (newusers[token]) {
     // verified new user
@@ -273,7 +272,7 @@ app.post("/verify", function (req, res) {
 });
 
 /* runsql can only be used by auth users */
-app.post("/runsql", function (req, res) {
+app.post("/runsql", function(req, res) {
   const user = req.user;
   const data = req.body;
   if (req.isAuthenticated()) {
@@ -282,7 +281,7 @@ app.post("/runsql", function (req, res) {
     if (userinfo.role === "admin") {
       runsql(res, data);
     } else {
-      safesql(user, res, data);  // slightly safer
+      safesql(user, res, data); // slightly safer
     }
   } else {
     // much restricted
@@ -291,7 +290,7 @@ app.post("/runsql", function (req, res) {
 });
 
 // delivers userinfo about logged in user
-app.post("/userinfo", function (req, res) {
+app.post("/userinfo", function(req, res) {
   const user = req.user;
   const data = req.body;
   if (req.isAuthenticated()) {
@@ -309,13 +308,12 @@ async function getuinf(sql, res) {
 }
 
 async function saferSQL(res, obj, options) {
-  const predefined = siteinf.ALLOWED_SQL || [];  // add accepted sql in projectname.json
-  let results = { error: "Illegal sql" };
+  const predefined = siteinf.LEVEL3 || []; // add accepted sql in projectname.json
   const tables = options.tables.split(",");
-  const sql = obj.sql.replace("inner ", "");
-  // inner join => join
-  const data = obj.data;
   const allowed = predefined.concat(tables.map(e => `select * from ${e}`));
+  let results = { error: "Illegal sql" };
+  const sql = obj.sql;
+  const data = obj.data;
   if (allowed.includes(sql)) {
     await db
       .any(sql, data)
@@ -330,23 +328,22 @@ async function saferSQL(res, obj, options) {
   res.send({ results });
 }
 
-app.get(`/components/:file`, function (req, res) {
+app.get(`/components/:file`, function(req, res) {
   const { file } = req.params;
   res.sendFile(__dirname + `/public/components/${file}`);
 });
 
-app.get(`/users/:file`, function (req, res) {
+app.get(`/users/:file`, function(req, res) {
   const { file } = req.params;
   res.sendFile(__dirname + `/public/users/${file}`);
 });
 
-
-app.get(`/admin/:file`, Ensure.ensureLoggedIn(), function (req, res) {
+app.get(`/admin/:file`, Ensure.ensureLoggedIn(), function(req, res) {
   const { file } = req.params;
   res.sendFile(__dirname + `/public/${project}/admin/${file}`);
 });
 
-app.get("/myself", function (req, res) {
+app.get("/myself", function(req, res) {
   const user = req.user;
   if (user) {
     const { username } = req.user;
@@ -356,7 +353,7 @@ app.get("/myself", function (req, res) {
   }
 });
 
-app.get("/htmlfiler/:admin", function (req, res) {
+app.get("/htmlfiler/:admin", function(req, res) {
   let path = `public/${project}`;
   if (req.user) {
     const { username } = req.user;
@@ -365,7 +362,7 @@ app.get("/htmlfiler/:admin", function (req, res) {
       path = `public/${project}/admin`;
     }
   }
-  fs.readdir(path, function (err, files) {
+  fs.readdir(path, function(err, files) {
     //console.log(err);
     const items = files.filter(e => e.endsWith(".html") && e !== "index.html");
     res.send({ items });
@@ -374,47 +371,56 @@ app.get("/htmlfiler/:admin", function (req, res) {
 
 app.use(express.static(`public/${project}`));
 
-app.listen(PORT, function () {
+app.listen(PORT, function() {
   console.log(`Connect to http://localhost:${PORT}`);
   lagBrukerliste();
 });
 
 async function safesql(user, res, obj) {
   let results;
-  const sql = obj.sql;
-  const lowsql = "" + sql.toLowerCase();
+  const opentables = siteinf.OPEN_TABLES || "";
+  const sql = obj.sql.replace(/\s+/g,' ');
+  const lowsql = "" + sql.toLowerCase().replace(/in \((\d+,?)+\)/,'in ()');
   const data = obj.data;
   let unsafe = false;
-  let personal = false;
-
-  // fake security - should have dedicated endpoints for queries
-  // but this allows testing with a semblance of sequrity.
-  // Studs can see that some sql will be disallowed
+  let found = false; // true if rule matches for user
+  let customerid = "";
+  const predefined = siteinf.LEVEL3 || []; // add accepted sql in projectname.json
+  const tables = opentables.split(",");
+  const allowed = predefined.concat(tables.map(e => `select * from ${e}`));
   if (user && user.id) {
-    const userinfo = userlist[user.id];
-    if (userinfo.kundeid) {
-      let good = siteinf.ALLOWED_SQL || [  ];
-      if (good.includes(lowsql) ) {
-        personal = true;
-      }
+    customerid = user.id;
+    //const userinfo = userlist[user.id];
+    const level2 = siteinf.LEVEL2 || {};
+    const level1 = siteinf.LEVEL1 || {};
+    const forUser = level1[user.username] || [];
+    const forRole = level2[user.role] || [];
+    if (
+      forUser.includes(lowsql) ||
+      forRole.includes(lowsql) ||
+      allowed.includes(lowsql)
+    ) {
+      found = true;
     }
   }
-  unsafe = unsafe || !lowsql.startsWith("select");
-  unsafe = unsafe || lowsql.substr(6).includes("select");
+  // unsafe = unsafe || !lowsql.startsWith("select");
+  //unsafe = unsafe || lowsql.substr(6).includes("select");
   // only allow one select - disables subselect
-  unsafe = unsafe || lowsql.includes("delete");
+  //unsafe = unsafe || lowsql.includes("delete");
   unsafe = unsafe || lowsql.includes(";");
-  unsafe = unsafe || lowsql.includes("insert");
-  unsafe = unsafe || lowsql.includes("update");
+  //unsafe = unsafe || lowsql.includes("insert");
+  //unsafe = unsafe || lowsql.includes("update");
   unsafe = unsafe || lowsql.includes("union");
   unsafe = unsafe || lowsql.includes("alter");
   unsafe = unsafe || lowsql.includes("drop");
-  if (unsafe && !personal) {
-    results = {error: `This sql not allowed for ${user.username}` };
+  const actualSQL = sql.replace("#user#", customerid);
+  if (unsafe || !found) {
+    results = { error: `This sql not allowed for ${user.username}` };
+    console.log("SQL:",sql," DENIED for ",user.username);
     res.send({ results });
-  } else 
+  } else
     await db
-      .any(sql, data)
+      .any(actualSQL, data)
       .then(data => {
         results = data;
         res.send({ results });
@@ -424,7 +430,6 @@ async function safesql(user, res, obj) {
         results = { error: error.message };
         res.send({ results });
       });
-  
 }
 
 // allow admin to do anything
@@ -445,14 +450,14 @@ async function runsql(res, obj) {
 }
 
 /**
- * Eksempel på hvordan en kan lage sikre endepunkter som 
+ * Eksempel på hvordan en kan lage sikre endepunkter som
  * er kobla til en gitt db-component som skal kjøre en spesifikk
  * spørring. Under testing er komponenten kobla til /runsql.
  * Når vi ser at ting fungerer, kan vi lage et dedikert endepunkt
  * som kjører denne spørringen på en sikker måte.
  * MERK: her kjøres ikke en brukergenerert spørring, men en
  * spørring definert av utvikler. Det eneste som varierer er
- * id på bestilling og id på bruker. 
+ * id på bestilling og id på bruker.
  * Brukerid hentes fra session info, spørringen sjekker at
  * brukeren er eier av denne bestillingen.
  * Så lenge som server + passord/innlogging
@@ -462,7 +467,7 @@ async function runsql(res, obj) {
 /* hent en gitt bestilling for en kunde 
    kan ikke hente andre kunders bestillinger
 */
-app.post("/brukerbestilling", function (req, res) {
+app.post("/brukerbestilling", function(req, res) {
   const user = req.user;
   const userinfo = userlist[user.id] || {};
   const data = req.body.data;
@@ -480,5 +485,5 @@ app.post("/brukerbestilling", function (req, res) {
       return;
     }
   }
-  res.send({ error: "illegal" })
+  res.send({ error: "illegal" });
 });

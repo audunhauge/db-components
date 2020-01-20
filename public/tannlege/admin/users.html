@@ -9,21 +9,28 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <script src="/components/DbInsert.js"></script>
     <script src="/components/DbTable.js"></script>
+    <script src="/components/DbUpdate.js"></script>
     <script src="/components/Homebar.js"></script>
+    <link rel="stylesheet" href="/css/admin.css">
     <link rel="stylesheet" href="/css/shop.css">
     <style>
-     db-table {
-       --tsize: 32em;
-     }
+        db-table {
+            --tsize: 32em;
+        }
+        db-update {
+            width: 32em;
+        }
     </style>
 </head>
 
 <body>
     <home-bar heading="Nettbutikk" crumb="vare" getlinks="/htmlfiler/admin" username="/myself">
     </home-bar>
+
+    <!-- kan ikke bruke en db-insert da passordet skal krypteres
+        app.js har et endepunkt (/makeuser) for å lage en ny bruker gitt {username,role,password} -->
     <div id="admin">
-       
-        <form id="login" action="/makeuser"  method="post">
+        <form id="login" action="/makeuser" method="post">
             <div>
                 <label>Username:</label>
                 <input id="username" type="text" placeholder="un" name="username" /><br />
@@ -37,17 +44,27 @@
                 <input id="password" type="password" placeholder="pw" name="password" />
             </div>
             <div>
-                <input id="sub" type="submit" value="lagre" onclick="markBad()" />
+                <input id="sub" type="submit" value="lagre" />
             </div>
         </form>
+
+        <div class="table">
+            <db-table id="table" update="users" fields="userid:hidden,username,role,password" delete="users"
+                sql="select * from users">
+                <span slot="caption">Users</span>
+            </db-table>
+        </div>
+    
+        <db-update class="table" id="update" key="userid" update="true" fields="username,role" table="users">
+            <span slot="heading">Rediger Users</span>
+        </db-update>
+    
     </div>
-    <div class="table">
-        <db-table id="table" update="users"  
-            fields="userid:hidden,username,role,password" delete="users"
-            sql="select * from users">
-            <span slot="caption">Users</span>
-        </db-table>
-    </div>
+
+
+    
+
+
 </body>
 
 </html>
