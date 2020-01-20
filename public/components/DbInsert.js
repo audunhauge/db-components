@@ -135,8 +135,8 @@
     /**
      * table      listen for updates on this table if set
      * fields     the fields to show in form
-     * foreign    the foreign key connected to this select (local#book.bookid:title)
-     *            local is field in this table (usually the same as bookid), select bookid,title from book
+     * foreign    the foreign key connected to this select (local#book.bookid:title+date)
+     *            local is field in this table (usually the same as bookid), select book.bookid, showing title,date from book
      * connected  listen for event emitted by this component
      * silent     dont emitt events
      */
@@ -182,9 +182,6 @@
         // this component depends on an other specific component
         const [id, field] = this.connected.split(":");
         addEventListener(`dbFrom-${id}`, e => {
-          // TODO remove 2 lines if new code works
-          // const source = e.detail.source;
-          // if (id !== source) return; // we are not interested
           const dbComponent = document.getElementById(id);
           if (dbComponent) {
             this.makeform(this.fields);
@@ -240,8 +237,7 @@
       );
     }
 
-    // assumes foreign key has same name in both tables
-    // bok.forfatterid references forfatter.forfatterid
+
     makeSelect(table, field, use, localname) {
       const select = this._root.querySelector(`#${localname}`);
       const fields = field === use ? field : `${field},${use}`;
@@ -276,7 +272,7 @@
               .join("");
               select.innerHTML = options;
           }
-        }); // .catch(e => console.log(e.message));
+        }); 
     }
 
     upsert(sql = "", data) {
@@ -303,13 +299,6 @@
               }
             })
             .catch(e => console.log(e.message));
-      /*
-        .then(
-          () =>
-            this.trigger({ table: this.table, insert: true })
-        )
-        .catch(e => console.log(e.message));
-        */
     }
   }
 
