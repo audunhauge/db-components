@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Registrer varer i kategori</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script src="/components/DbInsert.js"></script>
+    <script src="/components/DbUpdate.js"></script>
+    <script src="/components/DbTable.js"></script>
+    <script src="/components/DbForeign.js"></script>
+    <script src="/components/Homebar.js"></script>
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+
+<body>
+    <home-bar heading="Nettbutikk" crumb="vare" getlinks="/htmlfiler/admin" username="/myself">
+    </home-bar>
+    <div id="admin">
+
+        <div class="table">
+            <db-foreign id="katta" label="velg kategori" foreign="kategori" field="kategori" table="kategori"
+                sql="select * from kategori">
+            </db-foreign>
+            <db-table id="kats" update="kategori" key="kategori" fields="kategori" delete="kategori"
+                sql="select * from kategori">
+                <span slot="caption">Varer</span>
+            </db-table>
+            <db-insert id="katin" fields="kategori"  table="kategori">
+                <span slot="heading">Legg til kategori</span>
+            </db-insert>
+            <db-table id="varer" update="vare" key="vareid" fields="navn,pris:money,kategori" delete="vare"
+                sql="select * from vare">
+                <span slot="caption">Varer</span>
+            </db-table>
+        </div>
+
+    </div>
+</body>
+
+</html>

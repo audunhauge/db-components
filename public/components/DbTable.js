@@ -266,6 +266,8 @@
           const leader = this.fieldlist[0].name;
           const selected = Array.from(divBody.querySelectorAll("input:checked"))
             .map(e => e.value)
+            // make it work even if first field is not numeric key
+            .map(e => Number.isInteger(Number(e)) ? Number(e) : `'${e}'`)
             .join(",");
           const sql = `delete from ${table} where ${leader} in (${selected})`;
           const data = {};

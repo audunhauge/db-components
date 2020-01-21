@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script src="/components/DbInsert.js"></script>
+    <script src="/components/DbForeign.js"></script>
+    <script src="/components/DbUpdate.js"></script>
+    <script src="/components/DbTable.js"></script>
+    <script src="/components/Homebar.js"></script>
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+
+<body>
+    <home-bar heading="Tannlegekontoret" crumb="behandling" getlinks="/htmlfiler/admin" username="/myself">
+    </home-bar>
+
+    <div id="main">
+        <div id="admin">
+
+            <db-table " update="behandling"  
+                fields="behandlingid:hidden,dato:date,pris:money,betalt:boolean,kunde,tannlege,dato:time" 
+                delete="behandling"
+                sql="select b.*,t.fornavn as tannlege, k.fornavn as kunde from behandling b join kunde k on (b.kundeid=k.kundeid) 
+                  join tannlege t on (t.tannlegeid=b.tannlegeid)">
+                <span slot="caption">Behandlinger</span>
+            </db-table>
+
+            <db-insert table="behandling" fields="dato:date,pris:number,betalt:checkbox"
+                foreign="kunde.kundeid:fornavn+etternavn,tannlege.tannlegeid:fornavn+etternavn">
+            </db-insert>
+
+        </div>
+
+    </div>
+
+</body>
+
+</html>
+
+<!--
+    CREATE TABLE  behandling  (
+   behandlingid  SERIAL PRIMARY KEY,
+   dato  date NOT NULL,
+   pris int,
+   betalt boolean default 'f',
+   kundeid  int NOT NULL,
+   tannlegeid int not null
+);
+
+-->

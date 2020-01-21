@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Registrer varer</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script src="/components/DbUser.js"></script>
+    <script src="/components/DbInsert.js"></script>
+    <script src="/components/DbList.js"></script>
+    <script src="/components/DbTable.js"></script>
+    <script src="/components/Homebar.js"></script>
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+
+<body>
+
+    <home-bar heading="Nettbutikk" crumb="varer" getlinks="/htmlfiler/admin" username="/myself"">
+    </home-bar>
+    
+    <h1 class=" centered">Tannleger</h1>
+        <div id="admin">
+            <div class="table">
+                <db-table  id="varer" update="vare" key="vareid"
+                    fields="navn,pris:money,kategori" delete="vare" 
+                    sql="select * from vare">
+                    <span slot="caption">Varer</span>
+                </db-table>
+
+                <db-insert id="vare" fields="navn,pris" foreign="kategori.kategori"
+                    table="vare">
+                    <span slot="heading">Legg til vare</span>
+                </db-insert>
+
+               
+            </div>
+
+        </div>
+
+</body>
+
+</html>

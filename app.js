@@ -403,13 +403,8 @@ async function safesql(user, res, obj) {
       found = true;
     }
   }
-  // unsafe = unsafe || !lowsql.startsWith("select");
-  //unsafe = unsafe || lowsql.substr(6).includes("select");
-  // only allow one select - disables subselect
-  //unsafe = unsafe || lowsql.includes("delete");
+
   unsafe = unsafe || lowsql.includes(";");
-  //unsafe = unsafe || lowsql.includes("insert");
-  //unsafe = unsafe || lowsql.includes("update");
   unsafe = unsafe || lowsql.includes("union");
   unsafe = unsafe || lowsql.includes("alter");
   unsafe = unsafe || lowsql.includes("drop");

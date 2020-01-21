@@ -1,0 +1,13 @@
+{
+  "CONNECTSTRING": "postgres://vareliste:123@localhost/vareliste",
+  "PORT": 3002,
+  "PROJECT": "vareliste",
+  "OPEN_TABLES": "vare" ,
+  "LEVEL3": [
+    "select * from vare"
+  ],
+  "LEVEL2": {
+  },
+  "LEVEL1": {
+  }
+}
