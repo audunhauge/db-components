@@ -405,7 +405,8 @@ async function safesql(user, res, obj) {
   }
   // no sql may include words from badlist
   const badlist = "; -- /* */ case union alter having drop ascii char pg_sleep grant owner".split(" ");
-  unsafe = badlist.reduce((s,v) => s || lowsql.includes(v), unsafe);
+  unsafe = unsafe || badlist.some(e => lowsql.includes(e));
+  // unsafe = badlist.reduce((s,v) => s || lowsql.includes(v), unsafe);
   const actualSQL = sql.replace("#user#", customerid);
   if (unsafe || !found) {
     results = { error: `This sql not allowed for ${user.username}` };
