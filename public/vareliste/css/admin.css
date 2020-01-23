@@ -3,63 +3,97 @@
   å manipulere databasen
 **/
 
-
 :root {
-    --light-grad: linear-gradient(125deg, rgba(255,255,255,0), rgba(255,255,255,.16));
-    --dark-grad: linear-gradient(125deg, rgba(0,0,0,0), rgba(0,0,0,.16));
-    --compWidth: 30em;
+  --light-grad: linear-gradient(
+    125deg,
+    rgba(255, 255, 255, 0),
+    rgba(255, 255, 255, 0.16)
+  );
+  --dark-grad: linear-gradient(125deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.16));
+  --compWidth: 30em;
+}
+
+#main {
+  display:grid;
+  grid-template-columns: repeat(3,1fr);
+}
+
+figure {
+  border: thin #c0c0c0 solid;
+    display: flex;
+    flex-flow: column;
+    padding: 5px;
+    max-width: 220px;
+    margin: 5px;
+}
+figcaption {
+  background-color: rgba(34, 34, 34, 0.76);
+  color: #fff;
+  font: italic smaller sans-serif;
+  padding: 3px;
+  text-align: center;
+}
+
+img {
+  width: 100px;
+  height: 100px;
+  margin: 20px;
+  border: solid gray 2px;
+}
+
+#admin {
+  margin: 10px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+#admin > * {
+  justify-self: center;
+}
+
+.table {
+  width: var(--compWidth);
+}
+
+#form {
+}
+
+home-bar {
+  /* --grad: var(--light-grad); */
+}
+
+db-table {
+  margin: 2em;
+  --alternate: rgba(188, 208, 228, 0.555);
+  --head: oldlace;
+}
+
+#total {
+  --tsize: 150px;
+}
+
+.total {
+  color: red;
+}
+
+@media screen and (max-width: 1550px) {
+  #username,
+  #info {
+    display: none;
   }
-  
-  
   #admin {
-    margin: 10px;
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    justify-content: space-between;
-    align-items: flex-start;
+    grid-template-columns: 1fr 1fr;
   }
-  
-  #admin > * {
-      justify-self: center;
-  }
-  
-  .table {
-    width: var(--compWidth);
-   
-  }
-  
-  #form {
-    
-  }
-  
-  home-bar {
-     /* --grad: var(--light-grad); */
-  }
-  
-  db-table {
-    margin: 2em;
-     --alternate: rgba(188, 208, 228, 0.555);
-     --head: oldlace;
-  }
+}
 
-  #total {
-    --tsize: 150px;
+@media screen and (max-width: 1054px) {
+  #username,
+  #info {
+    display: none;
   }
-
-  .total {
-    color:red;
+  #admin {
+    grid-template-columns: 1fr;
   }
-  
-  @media screen and (max-width: 1550px) {
-      #username , #info { display:none; }
-      #admin {
-          grid-template-columns: 1fr 1fr;
-      }
-    }
-
-    @media screen and (max-width: 1054px) {
-      #username , #info { display:none; }
-      #admin {
-          grid-template-columns: 1fr;
-      }
-    }    
+}

@@ -66,7 +66,7 @@
      * silent   don't emitt events
      * selected id of db-update that delivers current selected value
      *          listen for event telling which value is selected.
-     *          needed for a foreign key to work with update
+     *          needed for a foreign key to work with db-update
      *          the record has a value for the fk, but allow user to change it
      */
     static get observedAttributes() {

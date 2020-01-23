@@ -10,6 +10,7 @@
     <script src="/components/DbUser.js"></script>
     <script src="/components/DbInsert.js"></script>
     <script src="/components/DbList.js"></script>
+    <script src="/components/DbForeign.js"></script>
     <script src="/components/DbTable.js"></script>
     <script src="/components/Homebar.js"></script>
     <link rel="stylesheet" href="/css/admin.css">
@@ -23,18 +24,31 @@
     <h1 class=" centered">Tannleger</h1>
         <div id="admin">
             <div class="table">
-                <db-table  id="varer" update="vare" key="vareid"
-                    fields="navn,pris:money,kategori" delete="vare" 
+                <db-table id="varer" update="vare" key="vareid" fields="navn,pris:money,kategori" delete="vare"
                     sql="select * from vare">
                     <span slot="caption">Varer</span>
                 </db-table>
 
-                <db-insert id="vare" fields="navn,pris" foreign="kategori.kategori"
-                    table="vare">
+                <div>
+                    <h2>Våre beste oster</h2>
+                    <db-list id="list" cssimport="/css/admin.css" update="vare" fields="navn,pris,bilde,kategori"
+                        sql="select * from vare where kategori='Ost'">
+                        <div>
+                            <figure>
+                                <img src="/media/${bilde}">
+                                <figcaption> ${navn} ${pris}</figcaption>
+                            </figure>
+                            
+                        </div>
+
+                    </db-list>
+                </div>
+
+                <db-insert id="vare" fields="navn,pris,bilde" foreign="kategori.kategori" table="vare">
                     <span slot="heading">Legg til vare</span>
                 </db-insert>
 
-               
+
             </div>
 
         </div>
