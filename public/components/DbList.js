@@ -199,10 +199,10 @@
   function fill(node, values) {
     const replaced = node.innerHTML;
     return replaced.replace(/\$\{(.+?)\}/g, (_, v) => {
-      if (values[v]) {
+      if (values[v] !== undefined) {
         return values[v];
       } else {
-        return `#${v}`;
+        return `${v}`;
       }
     });
   }

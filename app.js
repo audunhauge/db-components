@@ -333,6 +333,29 @@ app.get(`/components/:file`, function(req, res) {
   res.sendFile(__dirname + `/public/components/${file}`);
 });
 
+app.get(`/media/`, function(req, res) {
+  // expected request for media/{file} but no filename
+  // happens if we expect a name for a pic- but non given
+  res.sendFile(__dirname + `/public/${project}/media/missing.png`);
+});
+
+app.get(`/media/:file`, function(req, res) {
+  const { file } = req.params;
+  const path = __dirname + `/public/${project}/media/${file}`;
+  try {
+    if (fs.existsSync(path)) {
+      //file exists
+      res.sendFile(__dirname + `/public/${project}/media/${file}`);
+    } else {
+      res.sendFile(__dirname + `/public/${project}/media/missing.png`);
+    }
+  } catch(err) {
+    console.error(err)
+    res.sendFile(__dirname + `/public/${project}/media/error.png`);
+  }
+  
+});
+
 app.get(`/users/:file`, function(req, res) {
   const { file } = req.params;
   res.sendFile(__dirname + `/public/users/${file}`);
