@@ -23,6 +23,13 @@
             white-space:nowrap;
             padding-right: 6px;
           }
+          input.error {
+            box-shadow: inset 0 0 5px red, 0 0 0 orange;
+            animation: pulse 1s alternate infinite;
+          }
+          @keyframes pulse {
+            100% { box-shadow: inset 0 0 2px black, 0 0 6px red; }
+          }
           </style>
           <label id="myself"><span></span><input disabled type="text" value=""></label>
       `;
@@ -108,7 +115,10 @@
       fetch("/userinfo", init)
         .then(r => r.json())
         .then(userinfo => {
-          console.log(userinfo);
+          if (userinfo && userinfo.error) {
+            input.classList.add("error");
+            input.title = userinfo.error;
+          }
           if (userinfo && userinfo[field]) {
             let value = userinfo[field];
             input.value = value;

@@ -302,9 +302,11 @@ app.post("/userinfo", function(req, res) {
 });
 
 async function getuinf(sql, res) {
-  const list = await db.any(sql);
-  const userinfo = list.length ? list[0] : {};
-  res.send(userinfo);
+  const list = await db.one(sql).catch(err => {
+    console.log(err);
+    return { error:err.message};
+  })
+  res.send(list);
 }
 
 async function saferSQL(res, obj, options) {

@@ -21,20 +21,25 @@
     <div id="admin">
 
         <div class="table">
+
             <db-foreign id="katta" label="velg kategori" foreign="kategori" field="kategori" table="kategori"
                 sql="select * from kategori">
             </db-foreign>
+
             <db-table id="kats" update="kategori" key="kategori" fields="kategori" delete="kategori"
                 sql="select * from kategori">
                 <span slot="caption">Varer</span>
             </db-table>
+
             <db-insert id="katin" fields="kategori"  table="kategori">
                 <span slot="heading">Legg til kategori</span>
             </db-insert>
+
             <db-table id="varer" update="vare" key="vareid" fields="navn,pris:money,kategori" delete="vare"
                 sql="select * from vare">
                 <span slot="caption">Varer</span>
             </db-table>
+            
         </div>
 
     </div>
