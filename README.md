@@ -35,6 +35,9 @@ This should start the server.
 * rename shop.json to bank.json
 * edit bank.sql - change tables/database/user/password etc
 * edit bank.json - reflect changes made in bank.sql
+  * here you can add sql for role or username  
+  see example in tannlege.json
+
 * rename/edit html files in admin
 
 # Examples of forms
