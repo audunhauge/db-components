@@ -1,0 +1,19 @@
+{
+  "CONNECTSTRING": "postgres://butikk:123@localhost/butikk",
+  "PORT": 3001,
+  "PROJECT": "butikk",
+  "OPEN_TABLES": "reiser" ,
+  "SELFREG": { "table":"passasjer", "fields":"fornavn,etternavn,adresse", "key":"passasjerid" },
+  "DEFAULT_ROLE" : "passasjer",
+  "INFO": "LEVEL3 is any user, LEVEL2 is user with role, LEVEL1 is named user, LEVEL0 is admin",
+  "LEVEL3": [
+    "select * from reiser by dato"
+  ],
+  "LEVEL2": {
+    "passasjer": [
+      "select * from bilett where passasjerid=#user#"
+    ]
+  },
+  "LEVEL1": {
+  }
+}
