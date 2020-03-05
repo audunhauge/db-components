@@ -20,18 +20,19 @@
     <div id="admin">
 
         <div class="table">
-            <db-table id="table" update="vare" fields="vareid:hidden,navn,pris:money" 
+            <db-table id="table" update="vare" 
+                fields="vareid:hidden,navn,pris:money,bilde" 
                  delete="vare"
                 sql="select * from vare">
                 <span slot="caption">Varer</span>
             </db-table>
         </div>
 
-        <db-insert id="form" fields="navn,pris"  table="vare">
+        <db-insert id="form" fields="navn,pris,bilde"  table="vare">
             <span slot="heading">Registrer Vare</span>
         </db-insert>
 
-        <db-update id="update" key="vareid" update="true" fields="navn,pris"
+        <db-update id="update" key="vareid" update="true" fields="navn,pris,bilde"
             table="vare">
             <span slot="heading">Rediger Vare</span>
         </db-update>

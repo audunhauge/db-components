@@ -47,7 +47,8 @@ CREATE TABLE bestilling (
 CREATE TABLE  vare  (
    vareid  SERIAL PRIMARY KEY,
    navn text not null,
-   pris int not null
+   pris int not null,
+   bilde text
 );
 
 -- order
