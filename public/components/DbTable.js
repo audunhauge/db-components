@@ -72,6 +72,10 @@
           </table>
       `;
 
+  // using this avoids pesky error from ts-check
+  // warning that HTMLElement does not have .value
+  const getValue = e => e.value;    
+
   const formatField = (type, value) => {
     // NOTE (value == null) covers (value == undefined) also
     switch (type) {
@@ -80,7 +84,7 @@
           ? { type: "true", value: "✓" }
           : { type: "false", value: "✗" };
       case "number":
-        return { type, value: +value };
+        return { type, value: Number(value) };
       case "money":
         return { type: "number", value: (+value).toFixed(2) };
       case "int":
@@ -88,7 +92,7 @@
       case "date":
       case "time":
         if (value == null) {
-          return "";
+          return { type, value:""  };
         }
         const now = new Date(value);
         return { type, value: type === "date" ? now.toJSON().substr(0,10) : now.toTimeString().substr(0,8)};
@@ -116,6 +120,7 @@
       this._root = this.attachShadow({ mode: "open" });
       this.shadowRoot.appendChild(template.content.cloneNode(true));
       addEventListener("dbUpdate", e => {
+        // @ts-ignore
         const table = e.detail.table;
         if (this.update && this.update === table)
           this.redraw(this.refsql || this.sql);
@@ -125,9 +130,10 @@
       divBody.addEventListener("click", e => {
         const prev = divBody.querySelector("tr.selected");
         if (prev) prev.classList.remove("selected"); // should be only one
-        let t = e.target;
+        
+        let t = /** @type {HTMLElement} */ (e.target);
         while (t && t.localName !== "tr") {
-          t = t.parentNode;
+          t =  /** @type {HTMLElement} */ (t.parentNode);
         }
         if (t && t.dataset && t.dataset.idx) {
           t.classList.add("selected");
@@ -142,9 +148,10 @@
      * fields     the fields to show in form
      * sql        select for fields
      * connected  listen for event emitted by this component
-     * delete     allow deletes
+     * delete     allow deletes, name of table to delete from
      * update     redraw when this table changes
      * silent     don't emit events
+     * service    where to post sql - /runsql
      */
     static get observedAttributes() {
       return [
@@ -208,11 +215,11 @@
       if (name === "connected") {
         this.connected = newValue;
         // this component depends on an other specific component
+        // id is component-id, field is used to add "where field=value" clause
         const [id, field] = this.connected.split(":");
         addEventListener(`dbFrom-${id}`, e => {
           // const source = e.detail.source;
-          // if (this.id === source) return; // triggered by self
-          const dbComponent = document.getElementById(id);
+          const dbComponent = /** @type {HTMLInputElement} */ (document.getElementById(id));
           if (dbComponent) {
             // component found - get its value
             const value = dbComponent.value || "";
@@ -265,7 +272,7 @@
           const table = this.delete;
           const leader = this.fieldlist[0].name;
           const selected = Array.from(divBody.querySelectorAll("input:checked"))
-            .map(e => e.value)
+            .map(getValue)
             // make it work even if first field is not numeric key
             .map(e => Number.isInteger(Number(e)) ? Number(e) : `'${e}'`)
             .join(",");
@@ -333,7 +340,7 @@
                 .map(
                   (e, i) =>
                     `<tr data-idx="${i}">${headers
-                      .map((h, i) => {
+                      .map(h => {
                         const { value, type } = formatField(h.type, e[h.name]);
                         return `<td class="${type}">${value}</td>`;
                       })

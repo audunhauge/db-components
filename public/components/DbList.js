@@ -2,14 +2,14 @@
 
 /* This component runs a sql-query and fills a template with returned values.
    The template can be any (but not table,td,tr,th) element and
-   can contain subelements. Any ${xxx} will be replaced with values
+   can contain sub-elements. Any ${xxx} will be replaced with values
    returned from the query. If the query returns multiple rows - then
    the template will be repeated.
    The component can be placed inside <ol> <ul> and then a <li> template
    behaves as you would expect. <tr> template inside a <table> works notte.
 */
 
-(function() {
+(function () {
   const template = document.createElement("template");
   const base = `<style> .error { box-shadow: inset 0 0 5px red; animation: blink 1s alternate infinite;}
               @keyframes blink { 100% { box-shadow:inset 0 0 0 red; } }
@@ -17,6 +17,7 @@
              </style> 
              #import#  
              <div id="main"><slot></slot></div>`;
+
 
   class DBList extends HTMLElement {
     constructor() {
@@ -60,7 +61,7 @@
     /**
      * Picks out usertemplate from slot and replicates it for all rows in
      * returned query result. Values are interpolated into ${fieldname} in template
-     * @param {Array} data is array returned from query [ {field:value, ...}, ..]
+     * @param {{results: object} } data is array returned from query [ {field:value, ...}, ..]
      */
     feedResultsToTemplate(data, divMain) {
       const list = data.results;
@@ -144,7 +145,7 @@
           const divMain = this._root.querySelector("#main");
           if (dbComponent) {
             // component found - get its value
-            const value = dbComponent.value || "";
+            const value =  /** @type {HTMLInputElement} */ (dbComponent).value || "";
             if (value !== "") {
               // check that sql does not have where clause and value is int
               let sql = this.sql;
