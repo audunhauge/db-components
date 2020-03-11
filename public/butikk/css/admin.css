@@ -1,0 +1,108 @@
+/**
+  css for et bibliotek med custom components for
+  å manipulere databasen
+**/
+
+
+:root {
+  --light-grad: linear-gradient(125deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .16));
+  --dark-grad: linear-gradient(125deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, .16));
+  --compWidth: 30em;
+}
+
+
+#admin {
+  margin: 10px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+#admin>* {
+  justify-self: center;
+}
+
+.table {
+  width: var(--compWidth);
+
+}
+
+#form {}
+
+home-bar {
+  /* --grad: var(--light-grad); */
+}
+
+db-table {
+  margin: 2em;
+  --alternate: rgba(188, 208, 228, 0.555);
+  --head: oldlace;
+}
+
+#total {
+  --tsize: 150px;
+}
+
+.total {
+  color: red;
+}
+
+@media screen and (max-width: 1550px) {
+
+  #username,
+  #info {
+    display: none;
+  }
+
+  #admin {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media screen and (max-width: 1054px) {
+
+  #username,
+  #info {
+    display: none;
+  }
+
+  #admin {
+    grid-template-columns: 1fr;
+  }
+}
+
+#main {
+  display:grid;
+  grid-template-columns: repeat(auto-fit,minmax(200px,1fr));
+  grid-template-rows: repeat(auto-fit,minmax(200px,1fr));
+}
+
+#main input {
+  opacity: 0;
+}
+#main figure {
+  border: solid transparent 4px;
+  position: relative;
+}
+
+#main input:checked ~ figure:before {
+  text-align: center;
+  top: -8px;
+  left: -8px;
+  width: 32px;
+  height: 32px;
+  display: inline-block;
+  border-radius: 50%;
+  background-color: rgba(199, 194, 194, 0.575);
+  content: "✔";
+  font-size: 24px;
+  color:green;
+  position: absolute;
+}
+
+@media print {
+  home-bar {
+    display: none;
+  }
+}

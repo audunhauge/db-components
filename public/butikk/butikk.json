@@ -1,0 +1,19 @@
+{
+  "CONNECTSTRING": "postgres://butikk:123@localhost/butikk",
+  "PORT": 3001,
+  "PROJECT": "butikk",
+  "OPEN_TABLES": "vare" ,
+  "SELFREG": { "table":"kunde", "fields":"fornavn,etternavn,adresse", "key":"kundeid" },
+  "DEFAULT_ROLE" : "kunde",
+  "INFO": "LEVEL3 is any user, LEVEL2 is user with role, LEVEL1 is named user, LEVEL0 is admin",
+  "LEVEL3": [
+    "select * from vare order by navn"
+  ],
+  "LEVEL2": {
+    "kunde": [
+      "select * from bestilling where kundeid=#user#"
+    ]
+  },
+  "LEVEL1": {
+  }
+}
