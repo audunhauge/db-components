@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <script src="/components/DbInsert.js"></script>
     <script src="/components/DbUpdate.js"></script>
-    <script src="/components/DbTable.js"></script>
+    <script src="/components/DbAction.js"></script>
     <script src="/components/DbList.js"></script>
     <script src="/components/Homebar.js"></script>
     <link rel="stylesheet" href="/css/admin.css">
@@ -20,20 +20,21 @@
     </home-bar>
 
     <div id="vareliste">
-        <db-list 
-            id="list" 
-            cssimport="/css/admin.css" 
-            update="vare" 
-            fields="navn,pris,bilde"
+        <db-list id="list" cssimport="/css/admin.css" update="vare" fields="navn,pris,bilde"
             sql="select * from vare order by navn">
             <div>
-                <figure>
-                    <img src="/media/${bilde}">
-                    <figcaption> ${navn} ${pris}</figcaption>
-                </figure>
+                <label for="${navn}">
+                    <input type="checkbox" id="${navn}">
+                    <figure id="${navn}">
+                        <img src="/media/${bilde}">
+                        <figcaption> ${navn} ${pris}</figcaption>
+                    </figure>
+                </label>
             </div>
-
         </db-list>
+        <db-action sql="insert into bestilling" selector="input:checked">
+            Kjøp valgte varer
+        </db-action>
     </div>
 </body>
 

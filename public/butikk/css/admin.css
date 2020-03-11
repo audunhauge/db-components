@@ -78,6 +78,29 @@ db-table {
   grid-template-rows: repeat(auto-fit,minmax(200px,1fr));
 }
 
+#main input {
+  opacity: 0;
+}
+#main figure {
+  border: solid transparent 4px;
+  position: relative;
+}
+
+#main input:checked ~ figure:before {
+  text-align: center;
+  top: -8px;
+  left: -8px;
+  width: 32px;
+  height: 32px;
+  display: inline-block;
+  border-radius: 50%;
+  background-color: rgba(199, 194, 194, 0.575);
+  content: "✔";
+  font-size: 24px;
+  color:green;
+  position: absolute;
+}
+
 @media print {
   home-bar {
     display: none;
