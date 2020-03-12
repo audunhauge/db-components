@@ -23,24 +23,29 @@
         <db-list id="list" cssimport="/css/admin.css" update="vare" fields="navn,pris,bilde"
             sql="select * from vare order by navn">
             <div>
-                <label for="${navn}">
-                    <input type="checkbox" id="${navn}">
-                    <figure id="${navn}">
+                <label for="vare${vareid}">
+                    <input type="checkbox" id="vare${vareid}">
+                    <figure data-id="${vareid}">
                         <img src="/media/${bilde}">
                         <figcaption> ${navn} ${pris}</figcaption>
                     </figure>
                 </label>
             </div>
         </db-list>
-        <div id="buy">
-            <button type="button">Kjøp varene</button>
-        </div>
+        <db-action sql="insert into bestilling" 
+             target = "list"
+             selector="input:checked ~ figure">
+            <span slot="button">Kjøp varene</span>
+            <div slot="form">
+                <div><label for="">Navn <input id="firstname" type="text"></label></div>
+                <div><label for="">Adresse <input id="adress" type="text"></label></div>
+                <div id="repeat">
+                    ${navn} ${pris}
+                </div>
+            </div>
+        </db-action>
     </div>
-    <div id="bestilling">
-        <div><label for="">Navn <input type="text"></label></div>
-        <div><label for="">Adresse <input type="text"></label></div>
-        <div><label for="">Mobil<input type="text"></label></div>
-    </div>
+
 </body>
 
 </html>

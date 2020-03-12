@@ -1,10 +1,13 @@
 // @ts-check
 /**
  * @file Komponenter
- * <p>yes jadda badda du</p>
+ * <p>
+ *   This component picks up selected elements from a db-list.
+ *   Assumes each element can be adressed by "input:selectd ~ div"
+ * </p>
  */
 
-(function() {
+(function () {
   const template = document.createElement("template");
   template.innerHTML = `
         <style>
@@ -22,24 +25,31 @@
             font-size: 1.2rem;
             border-radius: 5px;
             box-shadow: 3px 3px 2px gray;
+            transition:40ms;
           }
           #buy:active {
             box-shadow: 0 0 0 gray;
             transform: translate(3px,3px);
           }
+          #form {
+            display:none;
+          }
         </style>
         <div>
           <div id="buy">
-            <slot></slot>
+            <slot name="button"></slot>
+          </div>
+          <div id="form">
+            <slot name="form"></slot>
           </div>
         </div>
     `;
 
-  
-    /**
-     * Class used by component
-     * @extends HTMLElement
-     */
+
+  /**
+   * Class used by component
+   * @extends HTMLElement
+   */
   class DBAction extends HTMLElement {
     /**
      * Sets up default service
@@ -48,11 +58,28 @@
       super();
       this.service = "/runsql"; // default service
       this.sql = "";
+      this.target = "";
       this.selector = "";
       this._root = this.attachShadow({ mode: "open" });
       this.shadowRoot.appendChild(template.content.cloneNode(true));
+      const divBuy = this._root.querySelector("#buy");
+      const divForm = this._root.querySelector("#form");
+      divBuy.addEventListener("click", e => {
+        if (this.target) {
+          const dbcompTarget = document.getElementById(this.target);
+          if (dbcompTarget) {
+            // valid target - see if we have selected anything
+            const items = dbcompTarget._root.querySelectorAll(this.selector);
+            if (items.length > 0) {
+              divForm.style.display = "block";
+              divBuy.style.display = "none";
+              dbcompTarget.style.display = "none";
+            }
+          }
+        }
+      });
     }
-   
+
     /**
      * @returns {Array} [sql,selector,service]
      */
@@ -60,6 +87,7 @@
       return [
         "sql",
         "selector",
+        "target",
         "service",
       ];
     }
@@ -76,14 +104,17 @@
      * @param {string} newValue new value for this attribute
      */
     attributeChangedCallback(name, oldValue, newValue) {
-      if (name === "table") {
-        this.table = newValue;
+      if (name === "sql") {
+        this.sql = newValue;
+      }
+      if (name === "target") {
+        this.target = newValue;
       }
       if (name === "service") {
         this.service = newValue;
       }
-      if (name === "silent") {
-        this.silent = newValue;
+      if (name === "selector") {
+        this.selector = newValue;
       }
     }
 
