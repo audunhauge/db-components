@@ -1,4 +1,8 @@
 // @ts-check
+/**
+ * @file Komponenter
+ * <p>yes jadda badda du</p>
+ */
 
 (function() {
   const template = document.createElement("template");
@@ -32,7 +36,14 @@
     `;
 
   
+    /**
+     * Class used by component
+     * @extends HTMLElement
+     */
   class DBAction extends HTMLElement {
+    /**
+     * Sets up default service
+     */
     constructor() {
       super();
       this.service = "/runsql"; // default service
@@ -42,6 +53,9 @@
       this.shadowRoot.appendChild(template.content.cloneNode(true));
     }
    
+    /**
+     * @returns {Array} [sql,selector,service]
+     */
     static get observedAttributes() {
       return [
         "sql",
@@ -55,6 +69,12 @@
     }
 
 
+    /**
+     * 
+     * @param {string} name name of attribute
+     * @param {string} oldValue previous value (if any)
+     * @param {string} newValue new value for this attribute
+     */
     attributeChangedCallback(name, oldValue, newValue) {
       if (name === "table") {
         this.table = newValue;
@@ -90,6 +110,7 @@
         }
       };
       //console.log(sql, data);
+      // @ts-ignore
       fetch(this.service, init)
         .then(() => {
           // others may want to refresh view
