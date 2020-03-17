@@ -33,14 +33,46 @@
             </div>
         </db-list>
         <div id="buy">
-            <button type="button">Kjøp varene</button>
+            <button id="buybut" type="button">Kjøp varene</button>
         </div>
     </div>
     <div id="bestilling">
-        <div><label for="">Navn <input type="text"></label></div>
-        <div><label for="">Adresse <input type="text"></label></div>
-        <div><label for="">Mobil<input type="text"></label></div>
+        <div id="nota">
+            <div id="adresse">
+                <div><label>Navn <input type="text"></label></div>
+                <div><label>Adresse <input type="text"></label></div>
+                <div><label>Mobil<input type="text"></label></div>
+            </div>
+            <div id="vareliste">
+                <ul>
+                    <li>Vare 1</li>
+                    <li>Vare 2</li>
+                    <li>Vare 3</li>
+                </ul>
+                Pris: 3000kr
+            </div>
+            <div id="betaling">
+                <div><label>Visa<input  name="betaling" type="radio"></label></div>
+                <div><label>MasterCard<input  name="betaling" type="radio"></label></div>
+                <div><label>PayPal<input  name="betaling" type="radio"></label></div>
+            </div>
+        </div>
     </div>
+    <script>
+        let btn = document.getElementById("buybut");
+        let divBestilling = document.getElementById("bestilling");
+        let divVareliste = document.getElementById("vareliste");
+        btn.addEventListener("click", bestillVarer);
+        function bestillVarer() {
+            let valgteVarer = document.querySelector("db-list")._root.querySelectorAll("input:checked");
+            if (valgteVarer.length === 0) {
+                alert("Velg varer først");
+                return;
+            }
+            divBestilling.style.display = "block";
+            divVareliste.style.display = "none";
+        }
+    </script>
 </body>
 
 </html>

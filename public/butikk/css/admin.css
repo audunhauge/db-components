@@ -132,3 +132,15 @@ db-table {
   box-shadow: none;
   transform: translate(2px,2px);
 }
+
+#nota {
+  margin: 3rem;
+  padding: 2rem;
+  width:210mm;
+  height: 297mm;
+  margin-right: auto;
+  margin-left:auto;
+  background-color: whitesmoke;
+  border-radius: 4px;
+  box-shadow: 2px 2px 3px gray;
+}
