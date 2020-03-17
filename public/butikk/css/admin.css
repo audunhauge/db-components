@@ -134,6 +134,7 @@ db-table {
 }
 
 #nota {
+  position: relative;
   margin: 3rem;
   padding: 2rem;
   width:210mm;
@@ -164,7 +165,48 @@ db-table {
   background-color: rgba(0, 255,0, .02);
 }
 
+#adresse > div {
+  margin: 0.3rem;
+}
+
+#varebet {
+  display:  grid;
+  grid-template-columns: 2fr 1fr;
+}
+
+#betaling {
+  padding:2rem;
+}
+
+#betaling  label {
+  display:grid;
+  grid-template-columns: 2fr 1fr;
+}
 #adresse  label {
   display:grid;
   grid-template-columns: 1fr 3fr;
+}
+
+#adresse label > input {
+  width:16rem;
+}
+#vareliste > ul {
+  list-style-type: none;
+  font-size:1.1rem;
+  padding:5px;
+}
+#vareliste li {
+  padding-left: 3rem;
+}
+#vareliste div {
+  font-weight: bold;
+}
+#vareliste div > span {
+  color:blue;
+}
+#nota > div:nth-child(3) {
+  width: 8rem;
+  position: absolute;
+  bottom: 5rem;
+  left: calc(210mm / 2 - 4rem)
 }
