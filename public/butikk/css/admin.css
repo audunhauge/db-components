@@ -210,3 +210,7 @@ db-table {
   bottom: 5rem;
   left: calc(210mm / 2 - 4rem)
 }
+
+#valgt {
+  display: none;
+}

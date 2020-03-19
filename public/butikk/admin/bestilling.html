@@ -64,6 +64,7 @@
             </div>
         </div>
     </div>
+    <div id="valgt"></div>
     <script>
         let btn = document.getElementById("buybut");
         let btnBekreft = document.getElementById("bekreft");
@@ -84,8 +85,9 @@
             const valg = document.querySelector("input:checked");
             const verdi = valg.value;
             const divValg = document.getElementById("valgt");
-            divValg.innerHTML = "Tekst som skal vises" + verdi;
+            divValg.innerHTML = "Du har valgt å betale med " + verdi + ". Varene blir sendt snarest."
             divValg.style.display = "block";
+            divBestilling.style.display = "none";
         }
     </script>
 </body>
