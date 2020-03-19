@@ -54,9 +54,9 @@
                 </div>
                 <div id="betaling">
                     <h4>Betalingsmåte</h4>
-                    <div><label>Visa<input name="betaling" type="radio"></label></div>
-                    <div><label>MasterCard<input name="betaling" type="radio"></label></div>
-                    <div><label>PayPal<input name="betaling" type="radio"></label></div>
+                    <div><label>Visa<input value="visa" name="betaling" type="radio"></label></div>
+                    <div><label>MasterCard<input value="master" name="betaling" type="radio"></label></div>
+                    <div><label>PayPal<input value="paypal" name="betaling" type="radio"></label></div>
                 </div>
             </div>
             <div>
@@ -66,6 +66,7 @@
     </div>
     <script>
         let btn = document.getElementById("buybut");
+        let btnBekreft = document.getElementById("bekreft");
         let divBestilling = document.getElementById("bestilling");
         let divVareliste = document.getElementById("vareliste");
         btn.addEventListener("click", bestillVarer);
@@ -77,6 +78,14 @@
             }
             divBestilling.style.display = "block";
             divVareliste.style.display = "none";
+        }
+        btnBekreft.addEventListener("click", bekreft);
+        function bekreft() {
+            const valg = document.querySelector("input:checked");
+            const verdi = valg.value;
+            const divValg = document.getElementById("valgt");
+            divValg.innerHTML = "Tekst som skal vises" + verdi;
+            divValg.style.display = "block";
         }
     </script>
 </body>
